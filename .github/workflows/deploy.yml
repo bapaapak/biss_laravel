@@ -38,30 +38,55 @@ jobs:
           npm ci
           npm run build
 
-      - name: Deploy ke server via SSH
-        uses: easingthemes/ssh-deploy@main
-        with:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          ARGS: "-avzr --delete"
-          SOURCE: "./"
-          REMOTE_HOST: ${{ secrets.SSH_HOST }}
-          REMOTE_USER: ${{ secrets.SSH_USER }}
-          REMOTE_PORT: ${{ secrets.SSH_PORT }}
-          TARGET: "~/biss/"
-          EXCLUDE: "/node_modules/, /.git/, /.github/, /biss_laravel-main/, *.zip, *.sql, /storage/logs/, /storage/framework/cache/, /storage/framework/sessions/, /storage/framework/views/"
+      - name: Buat archive untuk deploy
+        run: |
+          tar --exclude='.git' \
+              --exclude='.github' \
+              --exclude='node_modules' \
+              --exclude='biss_laravel-main' \
+              --exclude='*.zip' \
+              --exclude='*.sql' \
+              --exclude='storage/logs' \
+              --exclude='storage/framework/cache' \
+              --exclude='storage/framework/sessions' \
+              --exclude='storage/framework/views' \
+              -czf /tmp/biss_deploy.tar.gz .
+          echo "Archive size: $(du -sh /tmp/biss_deploy.tar.gz)"
+
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Upload via SCP
+        run: |
+          scp -P ${{ secrets.SSH_PORT }} -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
+            /tmp/biss_deploy.tar.gz \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/biss_deploy.tar.gz
+
+      - name: Extract dan Deploy ke server via SSH
+        run: |
+          ssh -p ${{ secrets.SSH_PORT }} -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'ENDSSH'
+            mkdir -p ~/biss
+            cd ~/biss
+            tar -xzf ~/biss_deploy.tar.gz
+            rm ~/biss_deploy.tar.gz
+            echo "✅ Extract selesai"
+          ENDSSH
 
       - name: Jalankan Artisan Commands setelah deploy
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.SSH_PORT }}
-          script: |
+        run: |
+          ssh -p ${{ secrets.SSH_PORT }} -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'ENDSSH'
             cd ~/biss
             php artisan migrate --force
             php artisan config:cache
             php artisan route:cache
             php artisan view:cache
             php artisan storage:link
+            chmod -R 775 storage bootstrap/cache
             echo "✅ Deploy selesai: $(date)"
+          ENDSSH
