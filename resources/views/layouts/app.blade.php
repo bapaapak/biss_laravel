@@ -50,7 +50,7 @@
 
         /* Sidebar Header */
         .sidebar-header {
-            padding: 1.5rem;
+            padding: 1rem;
             display: flex;
             align-items: center;
             gap: 1rem;
@@ -89,13 +89,14 @@
         /* Navigation Links */
         .nav-link {
             color: #94a3b8;
-            padding: 0.85rem 1.25rem;
-            margin: 0.25rem 1rem;
+            padding: 0.55rem 1.25rem;
+            margin: 0.1rem 1rem;
             border-radius: 8px;
             display: flex;
             align-items: center;
-            gap: 1rem;
+            gap: 0.75rem;
             font-weight: 500;
+            font-size: 0.92rem;
             transition: all 0.2s ease;
             text-decoration: none;
         }
@@ -124,7 +125,7 @@
             text-transform: uppercase;
             letter-spacing: 0.05em;
             font-weight: 700;
-            padding: 1.5rem 1.25rem 0.5rem;
+            padding: 0.75rem 1.25rem 0.35rem;
         }
 
         /* Main Content Wrapper */
