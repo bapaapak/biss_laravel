@@ -34,7 +34,7 @@
         /* Sidebar Container */
         .sidebar {
             width: var(--sidebar-width);
-            height: 100vh;
+            height: calc(100vh / 0.67);
             background-color: var(--sidebar-bg);
             color: var(--sidebar-color);
             position: fixed;
@@ -130,7 +130,7 @@
         /* Main Content Wrapper */
         .main-wrapper {
             margin-left: var(--sidebar-width);
-            min-height: 100vh;
+            min-height: calc(100vh / 0.67);
             display: flex;
             flex-direction: column;
             transition: margin-left var(--transition-speed) ease;

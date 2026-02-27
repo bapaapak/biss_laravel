@@ -71,9 +71,18 @@ jobs:
           ssh -p ${{ secrets.SSH_PORT }} -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'ENDSSH'
             mkdir -p ~/biss
+            # Backup .env sebelum extract
+            if [ -f ~/biss/.env ]; then
+              cp ~/biss/.env /tmp/biss_env_backup
+            fi
             cd ~/biss
             tar -xzf ~/biss_deploy.tar.gz
             rm ~/biss_deploy.tar.gz
+            # Restore .env setelah extract (jangan sampai tertimpa)
+            if [ -f /tmp/biss_env_backup ]; then
+              cp /tmp/biss_env_backup ~/biss/.env
+              rm /tmp/biss_env_backup
+            fi
             echo "✅ Extract selesai"
           ENDSSH
 
@@ -82,11 +91,12 @@ jobs:
           ssh -p ${{ secrets.SSH_PORT }} -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'ENDSSH'
             cd ~/biss
-            php artisan migrate --force
+            php artisan config:clear
+            php artisan view:clear
+            php artisan route:clear
             php artisan config:cache
             php artisan route:cache
-            php artisan view:cache
-            php artisan storage:link
+            php artisan migrate --force
             chmod -R 775 storage bootstrap/cache
             echo "✅ Deploy selesai: $(date)"
           ENDSSH
