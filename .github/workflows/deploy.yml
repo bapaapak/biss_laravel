@@ -18,8 +18,15 @@ jobs:
           php-version: '8.2'
           extensions: mbstring, bcmath, ctype, fileinfo, json, openssl, pdo, tokenizer, xml, gd
 
+      - name: Debug - Cek working directory
+        run: |
+          echo "PWD: $PWD"
+          ls -la
+          php --version
+          composer --version
+
       - name: Install Composer dependencies
-        run: composer install --optimize-autoloader --no-dev --no-progress
+        run: composer install --optimize-autoloader --no-dev --no-progress --ignore-platform-reqs
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
