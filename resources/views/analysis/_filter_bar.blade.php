@@ -60,17 +60,6 @@
             @endforeach
         </select>
 
-        <select name="customer" class="form-select form-select-sm border-0 shadow-sm rounded-pill px-3"
-            style="background-color: #fff; cursor: pointer; height: 38px; min-width: 130px; max-width: 180px;"
-            onchange="this.form.submit()">
-            <option value="">All Customers</option>
-            @foreach($customers as $cust)
-                <option value="{{ $cust }}" {{ ($selectedCustomer ?? '') == $cust ? 'selected' : '' }}>
-                    {{ $cust }}
-                </option>
-            @endforeach
-        </select>
-
         <select name="category" class="form-select form-select-sm border-0 shadow-sm rounded-pill px-3"
             style="background-color: #fff; cursor: pointer; height: 38px; min-width: 160px; max-width: 250px;"
             onchange="this.form.submit()">
@@ -80,6 +69,17 @@
             @foreach($businessCategories as $cat)
                 <option value="{{ $cat->category_name }}" {{ ($selectedCategory ?? '') == $cat->category_name ? 'selected' : '' }}>
                     {{ $cat->category_name }}
+                </option>
+            @endforeach
+        </select>
+
+        <select name="customer" class="form-select form-select-sm border-0 shadow-sm rounded-pill px-3"
+            style="background-color: #fff; cursor: pointer; height: 38px; min-width: 130px; max-width: 180px;"
+            onchange="this.form.submit()">
+            <option value="">All Customers</option>
+            @foreach($customers as $cust)
+                <option value="{{ $cust }}" {{ ($selectedCustomer ?? '') == $cust ? 'selected' : '' }}>
+                    {{ $cust }}
                 </option>
             @endforeach
         </select>
