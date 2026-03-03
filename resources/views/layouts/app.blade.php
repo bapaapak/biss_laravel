@@ -14,6 +14,7 @@
     <style>
         html {
             zoom: 0.67;
+            overflow-x: hidden; /* Prevent horizontal scroll - must be on html, not body, to avoid clipping fixed elements */
         }
         :root {
             --sidebar-width: 280px;
@@ -27,8 +28,23 @@
         body {
             background-color: #f8fafc;
             font-family: 'Inter', sans-serif;
-            overflow-x: hidden;
-            /* Prevent horizontal scroll */
+        }
+
+        /* Fix modal backdrop and dialog clipped by zoom on html */
+        .modal-backdrop {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: calc(100vw / 0.67) !important;
+            height: calc(100vh / 0.67) !important;
+        }
+
+        .modal {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: calc(100vw / 0.67) !important;
+            height: calc(100vh / 0.67) !important;
         }
 
         /* Sidebar Container */

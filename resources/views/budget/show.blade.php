@@ -254,7 +254,7 @@
                                     <label class="form-label text-uppercase text-muted small fw-bold"
                                         style="font-size: 0.65rem;">Unit Cost (IDR)</label>
                                     <input type="text" id="item_price_display" class="form-control form-control-sm border-0"
-                                        value="0" onkeyup="formatNumber(this)">
+                                        value="0" oninput="formatNumber(this)" onchange="formatNumber(this)" onpaste="setTimeout(() => formatNumber(this), 0)">
                                     <input type="hidden" id="item_price" value="0">
                                 </div>
                             </div>
@@ -856,6 +856,12 @@
             }
 
             function addItem() {
+                // Sync price from display field in case onkeyup didn't fire (paste/autofill)
+                const priceDisplay = document.getElementById('item_price_display').value.replace(/\./g, '').replace(/[^\d]/g, '');
+                if (priceDisplay) {
+                    document.getElementById('item_price').value = priceDisplay;
+                }
+
                 const data = {
                     code: document.getElementById('item_code').value,
                     category: document.getElementById('item_category').value,
@@ -864,7 +870,7 @@
                     brand_spec: document.getElementById('item_brand').value,
                     app_process: document.getElementById('item_app_process').value,
                     qty: parseFloat(document.getElementById('item_qty').value),
-                    price: parseFloat(document.getElementById('item_price').value),
+                    price: parseFloat(document.getElementById('item_price').value) || parseFloat(priceDisplay) || 0,
                     condition_status: document.getElementById('item_condition_status').value,
                     condition_notes: document.getElementById('item_condition_notes').value,
                     target_schedule: document.getElementById('item_schedule').value,
@@ -938,6 +944,12 @@
             function updateItem() {
                 if (editingindex === -1) return;
 
+                // Sync price from display field
+                const priceDisplay = document.getElementById('item_price_display').value.replace(/\./g, '').replace(/[^\d]/g, '');
+                if (priceDisplay) {
+                    document.getElementById('item_price').value = priceDisplay;
+                }
+
                 const data = {
                     code: document.getElementById('item_code').value,
                     category: document.getElementById('item_category').value,
@@ -946,7 +958,7 @@
                     brand_spec: document.getElementById('item_brand').value,
                     app_process: document.getElementById('item_app_process').value,
                     qty: parseFloat(document.getElementById('item_qty').value),
-                    price: parseFloat(document.getElementById('item_price').value),
+                    price: parseFloat(document.getElementById('item_price').value) || parseFloat(priceDisplay) || 0,
                     condition_status: document.getElementById('item_condition_status').value,
                     condition_notes: document.getElementById('item_condition_notes').value,
                     target_schedule: document.getElementById('item_schedule').value,

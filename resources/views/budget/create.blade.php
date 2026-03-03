@@ -192,7 +192,7 @@
                             <div class="input-group input-group-sm">
                                 <span class="input-group-text bg-light">IDR</span>
                                 <input type="text" id="item_price_display" class="form-control" value="0"
-                                    onkeyup="formatNumber(this)">
+                                    oninput="formatNumber(this)" onchange="formatNumber(this)" onpaste="setTimeout(() => formatNumber(this), 0)">
                             </div>
                             <input type="hidden" id="item_price" value="0">
                         </div>
@@ -435,7 +435,35 @@
             return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
         }
 
+        function validateHeader() {
+            const missing = [];
+            if (!document.querySelector('[name="department"]').value) missing.push('Department');
+            if (!document.querySelector('[name="cost_center"]').value) missing.push('Cost Center');
+            if (!document.getElementById('projectIoSelect').value) missing.push('Project / IO Reference');
+            if (!document.querySelector('[name="customer"]').value) missing.push('Customer');
+            if (!document.querySelector('[name="model"]').value.trim()) missing.push('Model');
+
+            if (missing.length > 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Informasi Belum Lengkap',
+                    html: 'Harap isi field berikut terlebih dahulu:<br><b>' + missing.join(', ') + '</b>',
+                    confirmButtonColor: '#4f46e5'
+                });
+                return false;
+            }
+            return true;
+        }
+
         function addItem() {
+            // Validate header fields first
+            if (!validateHeader()) return;
+            // Sync price from display field in case onkeyup didn't fire (paste/autofill)
+            const priceDisplay = document.getElementById('item_price_display').value.replace(/\./g, '').replace(/[^\d]/g, '');
+            if (priceDisplay) {
+                document.getElementById('item_price').value = priceDisplay;
+            }
+
             const data = {
                 code: document.getElementById('item_code').value,
                 category: document.getElementById('item_category').value,
@@ -444,7 +472,7 @@
                 brand_spec: document.getElementById('item_brand').value,
                 app_process: document.getElementById('item_app_process').value,
                 qty: parseFloat(document.getElementById('item_qty').value),
-                price: parseFloat(document.getElementById('item_price').value),
+                price: parseFloat(document.getElementById('item_price').value) || parseFloat(priceDisplay) || 0,
                 condition_status: document.getElementById('item_condition_status').value,
                 condition_notes: document.getElementById('item_condition_notes').value,
                 target_schedule: document.getElementById('item_schedule').value,
@@ -519,6 +547,12 @@
         function updateItem() {
             if (editingindex === -1) return;
 
+            // Sync price from display field
+            const priceDisplay = document.getElementById('item_price_display').value.replace(/\./g, '').replace(/[^\d]/g, '');
+            if (priceDisplay) {
+                document.getElementById('item_price').value = priceDisplay;
+            }
+
             const data = {
                 code: document.getElementById('item_code').value,
                 category: document.getElementById('item_category').value,
@@ -527,7 +561,7 @@
                 brand_spec: document.getElementById('item_brand').value,
                 app_process: document.getElementById('item_app_process').value,
                 qty: parseFloat(document.getElementById('item_qty').value),
-                price: parseFloat(document.getElementById('item_price').value),
+                price: parseFloat(document.getElementById('item_price').value) || parseFloat(priceDisplay) || 0,
                 condition_status: document.getElementById('item_condition_status').value,
                 condition_notes: document.getElementById('item_condition_notes').value,
                 target_schedule: document.getElementById('item_schedule').value,
@@ -628,7 +662,6 @@
                 grouped[key].push({ ...item, originalIndex: index });
             });
 
-            let grandTotal = 0;
             for (const key in grouped) {
                 let originalIndexCounter = 1;
                 // Category/Process Header Row
