@@ -115,6 +115,39 @@ Route::any('/deploy-update', function (Illuminate\Http\Request $request) {
             $output .= "Migration skipped/failed: " . $e->getMessage() . "\n";
         }
 
+        // 4. Direct DB patches (for when migrations can't run cleanly)
+        try {
+            // Add item_no column if not exists
+            $hasItemNo = \DB::select("SHOW COLUMNS FROM budget_items LIKE 'item_no'");
+            if (empty($hasItemNo)) {
+                \DB::statement('ALTER TABLE budget_items ADD COLUMN item_no INT NULL AFTER id');
+                $output .= "Added item_no column to budget_items.\n";
+            } else {
+                $output .= "item_no column already exists.\n";
+            }
+        } catch (\Exception $e) {
+            $output .= "DB patch (item_no): " . $e->getMessage() . "\n";
+        }
+
+        try {
+            // Create cache table if not exists
+            \DB::statement("CREATE TABLE IF NOT EXISTS `cache` (
+                `key` varchar(255) NOT NULL,
+                `value` mediumtext NOT NULL,
+                `expiration` int NOT NULL,
+                PRIMARY KEY (`key`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+            \DB::statement("CREATE TABLE IF NOT EXISTS `cache_locks` (
+                `key` varchar(255) NOT NULL,
+                `owner` varchar(255) NOT NULL,
+                `expiration` int NOT NULL,
+                PRIMARY KEY (`key`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+            $output .= "Cache tables ensured.\n";
+        } catch (\Exception $e) {
+            $output .= "DB patch (cache): " . $e->getMessage() . "\n";
+        }
+
         return "<pre>Deployment results:\n\n$output</pre>";
     } catch (\Exception $e) {
         return "Critical failure: " . $e->getMessage();
