@@ -95,8 +95,17 @@ Route::any('/deploy-update', function (Illuminate\Http\Request $request) {
         $output .= "Git Pull Output:\n" . ($gitOutput ?: "No output from git") . "\n\n";
 
         // 2. Bersihkan Cache
-        Artisan::call('optimize:clear');
-        $output .= "Cache cleared successfully.\n";
+        try {
+            Artisan::call('optimize:clear');
+            $output .= "Cache cleared successfully.\n";
+        } catch (\Exception $e) {
+            $output .= "Cache clear warning: " . $e->getMessage() . "\n";
+            // Try individual cache clears as fallback
+            try { Artisan::call('config:clear'); } catch (\Exception $e2) {}
+            try { Artisan::call('route:clear'); } catch (\Exception $e2) {}
+            try { Artisan::call('view:clear'); } catch (\Exception $e2) {}
+            $output .= "Fallback cache clears attempted.\n";
+        }
 
         // 3. Jalankan Migrasi
         try {
