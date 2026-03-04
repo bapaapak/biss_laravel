@@ -98,7 +98,18 @@
     <div class="card border-0 shadow-sm d-none d-md-block">
         <div class="card-body p-0">
             <div class="table-responsive" style="overflow: visible;">
-                <table class="table table-hover mb-0" id="tableBudget" style="font-size: 0.85rem;">
+                <table class="table table-hover mb-0" id="tableBudget" style="font-size: 0.85rem; table-layout: fixed;">
+                    <colgroup>
+                        <col style="width: 9%;">
+                        <col style="width: 5%;">
+                        <col style="width: 14%;">
+                        <col style="width: 5%;">
+                        <col style="width: 16%;">
+                        <col style="width: 25%;">
+                        <col style="width: 11%;">
+                        <col style="width: 8%;">
+                        <col style="width: 5%;">
+                    </colgroup>
                     <thead class="bg-light">
                         <tr>
                             <th class="ps-4 text-uppercase text-muted small fw-semibold" style="font-size: 0.7rem;">IO
@@ -115,18 +126,18 @@
                             <th class="text-uppercase text-muted small fw-semibold text-center" style="font-size: 0.7rem;">
                                 Status</th>
                             <th class="text-uppercase text-muted small fw-semibold text-center pe-4"
-                                style="font-size: 0.7rem; width: 4%;">Actions</th>
+                                style="font-size: 0.7rem;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($plans as $plan)
                             <tr>
-                                <td class="ps-4 fw-semibold text-primary align-middle">{{ $plan->io_number ?? '-' }}</td>
-                                <td class="align-middle">{{ $plan->cc_code ?? '-' }}</td>
-                                <td class="align-middle">
-                                    <div class="fw-semibold">{{ $plan->customer_code ?? $plan->customer ?? '-' }}</div>
+                                <td class="ps-4 fw-semibold text-primary align-middle" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ $plan->io_number ?? '-' }}</td>
+                                <td class="align-middle" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ $plan->cc_code ?? '-' }}</td>
+                                <td class="align-middle" style="overflow: hidden;">
+                                    <div class="fw-semibold" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ $plan->customer_code ?? $plan->customer ?? '-' }}</div>
                                     @if($plan->model)
-                                        <div class="small text-muted fw-normal" style="font-size: 0.75rem;">{{ $plan->model }}</div>
+                                        <div class="small text-muted fw-normal" style="font-size: 0.75rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ $plan->model }}</div>
                                     @endif
                                 </td>
                                 <td class="align-middle">
@@ -137,8 +148,8 @@
                                         -
                                     @endif
                                 </td>
-                                <td class="fw-semibold align-middle">{{ $plan->project->project_name ?? '-' }}</td>
-                                <td class="align-middle" style="min-width: 280px;">
+                                <td class="fw-semibold align-middle" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ $plan->project->project_name ?? '-' }}</td>
+                                <td class="align-middle" style="overflow: hidden; word-wrap: break-word;">
                                     @php
                                         $itemCount = $plan->items->count();
                                     @endphp
