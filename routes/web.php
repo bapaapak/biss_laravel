@@ -89,9 +89,16 @@ Route::any('/deploy-update', function (Illuminate\Http\Request $request) {
 
     $output = "";
     try {
+        // 0. Reset opcache to ensure fresh code
+        if (function_exists('opcache_reset')) {
+            opcache_reset();
+            $output .= "OPcache reset.\n";
+        }
+
         // 1. Tarik Kode Terbaru dari GitHub
         // Kita gunakan full path ke git jika perlu, tapi biasanya 'git' saja cukup
-        $gitOutput = shell_exec('git fetch origin && git reset --hard origin/main 2>&1');
+        $basePath = base_path();
+        $gitOutput = shell_exec("cd $basePath && git fetch origin && git reset --hard origin/main 2>&1");
         $output .= "Git Pull Output:\n" . ($gitOutput ?: "No output from git") . "\n\n";
 
         // 2. Bersihkan Cache
