@@ -18,7 +18,8 @@ class PurchaseRequestController extends Controller
             ->leftJoin('budget_plans as bp', 'bi.plan_id', '=', 'bp.id')
             ->leftJoin('projects as p', 'bp.project_id', '=', 'p.id')
             ->leftJoin('master_customers as c', 'p.customer', '=', 'c.customer_code')
-            ->leftJoin('users as u', 'pr.requester_id', '=', 'u.id');
+            ->leftJoin('users as u', 'pr.requester_id', '=', 'u.id')
+            ->leftJoin('master_departments as md', 'pr.department', '=', 'md.dept_name');
 
         // Filter by Customer Scope for User/Dept Head
         $user = Auth::user();
@@ -66,6 +67,7 @@ class PurchaseRequestController extends Controller
             DB::raw('MAX(c.customer_name) as customer_name'),
             DB::raw('MAX(pr.business_category) as business_category'),
             DB::raw('MAX(COALESCE(pr.department, bp.department)) as department_code'),
+            DB::raw('MAX(md.dept_code) as dept_short_code'),
             DB::raw('MAX(u.full_name) as requester_name'),
             DB::raw('MAX(bi.item_name) as sample_item'),
             DB::raw('MAX(pr.notes) as notes'),
@@ -92,11 +94,11 @@ class PurchaseRequestController extends Controller
 
         // IO Numbers - Only from Approved Budget Plans with remaining budget
         $ios = DB::table('budget_plans')
-            ->join('master_io', 'budget_plans.io_id', '=', 'master_io.id')
+            ->leftJoin('master_io', 'budget_plans.io_id', '=', 'master_io.id')
             ->join('projects', 'budget_plans.project_id', '=', 'projects.id')
             ->where('budget_plans.status', 'Approved')
             ->select(
-                'master_io.io_number',
+                DB::raw('COALESCE(master_io.io_number, budget_plans.io_number) as io_number'),
                 'projects.project_name',
                 'budget_plans.id as plan_id'
             )
@@ -105,7 +107,7 @@ class PurchaseRequestController extends Controller
                           JOIN budget_items bi2 ON pr.budget_item_id = bi2.id
                           WHERE bi2.plan_id = budget_plans.id AND pr.status = "Approved"), 0) as realized')
             ->distinct()
-            ->orderBy('master_io.io_number')
+            ->orderByRaw('COALESCE(master_io.io_number, budget_plans.io_number)')
             ->get()
             ->map(function ($io) {
                 $io->remaining = $io->total_budget - $io->realized;
@@ -117,12 +119,12 @@ class PurchaseRequestController extends Controller
         $budget_items = DB::table('budget_items')
             ->join('budget_plans', 'budget_items.plan_id', '=', 'budget_plans.id')
             ->join('projects', 'budget_plans.project_id', '=', 'projects.id')
-            ->join('master_io', 'budget_plans.io_id', '=', 'master_io.id')
+            ->leftJoin('master_io', 'budget_plans.io_id', '=', 'master_io.id')
             ->where('budget_plans.status', 'Approved')
             ->select(
                 'budget_items.*',
                 'projects.project_name',
-                'master_io.io_number',
+                DB::raw('COALESCE(master_io.io_number, budget_plans.io_number) as io_number'),
                 'budget_plans.model',
                 DB::raw('(SELECT COALESCE(SUM(pr.qty_req * pr.estimated_price), 0) FROM purchase_requests pr WHERE pr.budget_item_id = budget_items.id AND pr.status != "Rejected") as realized_amount')
             )
@@ -286,10 +288,31 @@ class PurchaseRequestController extends Controller
         // Fetch Master Data for Editing
         $depts = DB::table('master_departments')->orderBy('dept_name')->get();
         $cats = DB::table('master_categories')->orderBy('category_name')->get();
-        $ios = DB::table('master_io')->orderBy('io_number')->get();
         $ccs = DB::table('master_cost_center')->orderBy('cc_name')->get();
         $plants = DB::table('master_plants')->orderBy('plant_name')->get();
         $slocs = DB::table('master_storage_locations')->where('status', 'Active')->orderBy('sloc')->get();
+
+        // IO Numbers - Only from Approved Budget Plans with remaining budget (same as create form)
+        $ios = DB::table('budget_plans')
+            ->leftJoin('master_io', 'budget_plans.io_id', '=', 'master_io.id')
+            ->join('projects', 'budget_plans.project_id', '=', 'projects.id')
+            ->where('budget_plans.status', 'Approved')
+            ->select(
+                DB::raw('COALESCE(master_io.io_number, budget_plans.io_number) as io_number'),
+                'projects.project_name',
+                'budget_plans.id as plan_id'
+            )
+            ->selectRaw('(SELECT COALESCE(SUM(bi.qty * bi.estimated_price), 0) FROM budget_items bi WHERE bi.plan_id = budget_plans.id AND bi.parent_item_id IS NULL) as total_budget')
+            ->selectRaw('COALESCE((SELECT SUM(pr.qty_req * pr.estimated_price) FROM purchase_requests pr 
+                          JOIN budget_items bi2 ON pr.budget_item_id = bi2.id
+                          WHERE bi2.plan_id = budget_plans.id AND pr.status = "Approved"), 0) as realized')
+            ->distinct()
+            ->orderByRaw('COALESCE(master_io.io_number, budget_plans.io_number)')
+            ->get()
+            ->map(function ($io) {
+                $io->remaining = $io->total_budget - $io->realized;
+                return $io;
+            });
 
         // Fetch Items and Budget Links for "Add Item" form
         $m_items = DB::table('master_items')->orderBy('item_name')->get();
@@ -298,13 +321,13 @@ class PurchaseRequestController extends Controller
         $budget_items = DB::table('budget_items')
             ->join('budget_plans', 'budget_items.plan_id', '=', 'budget_plans.id')
             ->join('projects', 'budget_plans.project_id', '=', 'projects.id')
-            ->join('master_io', 'budget_plans.io_id', '=', 'master_io.id')
+            ->leftJoin('master_io', 'budget_plans.io_id', '=', 'master_io.id')
             ->select(
                 'budget_items.id',
                 'budget_items.item_code',
                 'budget_items.item_name',
                 'projects.project_name',
-                'master_io.io_number',
+                DB::raw('COALESCE(master_io.io_number, budget_plans.io_number) as io_number'),
                 'budget_plans.model',
                 'budget_items.estimated_price',
                 'budget_items.total_amount',
@@ -567,6 +590,26 @@ class PurchaseRequestController extends Controller
 
         return view('pr.print', compact('items', 'header'));
     }
+    public function validateImport(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls',
+        ]);
+
+        try {
+            $importer = new \App\Imports\PurchaseRequestImport();
+            $errors = $importer->validateFile($request->file('file'));
+
+            if (!empty($errors)) {
+                return response()->json(['valid' => false, 'errors' => $errors]);
+            }
+
+            return response()->json(['valid' => true, 'message' => 'Format sesuai template.']);
+        } catch (\Exception $e) {
+            return response()->json(['valid' => false, 'errors' => [$e->getMessage()]]);
+        }
+    }
+
     public function import(Request $request)
     {
         $request->validate([

@@ -22,7 +22,8 @@ class BudgetController extends Controller
         // Start query with joins
         $query = BudgetPlan::leftJoin('master_customers', 'budget_plans.customer', '=', 'master_customers.customer_name')
             ->leftJoin('projects', 'budget_plans.project_id', '=', 'projects.id')
-            ->select('budget_plans.*', 'master_customers.customer_code')
+            ->leftJoin('master_departments', 'budget_plans.department', '=', 'master_departments.dept_code')
+            ->select('budget_plans.*', 'master_customers.customer_code', 'master_departments.dept_code', 'master_departments.dept_name as dept_full_name')
             ->with(['items', 'project']);
 
         // Filter by Customer Scope for User/Dept Head
@@ -47,7 +48,11 @@ class BudgetController extends Controller
                     ->orWhere('budget_plans.status', 'like', "%{$search}%")
                     ->orWhere('budget_plans.department', 'like', "%{$search}%")
                     ->orWhere('budget_plans.model', 'like', "%{$search}%")
-                    ->orWhere('budget_plans.fiscal_year', 'like', "%{$search}%");
+                    ->orWhere('budget_plans.fiscal_year', 'like', "%{$search}%")
+                    ->orWhereHas('items', function ($qi) use ($search) {
+                        $qi->where('item_name', 'like', "%{$search}%")
+                            ->orWhere('item_code', 'like', "%{$search}%");
+                    });
             });
         }
 

@@ -18,6 +18,17 @@
             font-weight: 500;
             font-size: 0.75rem;
         }
+
+        /* Items expand inline */
+        .items-detail-overlay {
+            padding: 8px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            display: none;
+            max-height: 220px;
+            overflow-y: auto;
+        }
     </style>
 
     <!-- Page Header -->
@@ -51,13 +62,13 @@
                     <h5 class="modal-title" id="importExcelModalLabel">Import PR from Excel</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form action="{{ route('pr.import') }}" method="POST" enctype="multipart/form-data">
+                <form id="importExcelForm" action="{{ route('pr.import') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     <div class="modal-body">
                         <div class="mb-3">
                             <label for="file" class="form-label">Choose Excel File</label>
-                            <input type="file" class="form-control" id="file" name="file" required
-                                accept=".xlsx, .xls, .csv">
+                            <input type="file" class="form-control" id="importFile" name="file" required
+                                accept=".xlsx,.xls">
                             <div class="form-text mt-2">
                                 <a href="{{ asset('template_pr_persis_format.xlsx') }}" download
                                     class="text-decoration-none">
@@ -65,13 +76,17 @@
                                 </a>
                             </div>
                         </div>
+                        <div id="importValidationResult" style="display:none;"></div>
                         <div class="alert alert-info small">
-                            <i class="fas fa-info-circle me-1"></i> Make sure the file format matches the template.
+                            <i class="fas fa-info-circle me-1"></i> Pastikan format file sesuai dengan template.
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary">Import</button>
+                        <button type="submit" id="importSubmitBtn" class="btn btn-primary">
+                            <span class="spinner-border spinner-border-sm d-none me-1" id="importSpinner" role="status"></span>
+                            Import
+                        </button>
                     </div>
                 </form>
             </div>
@@ -240,23 +255,48 @@
                                     <span class="text-muted">-</span>
                                 @endif
                             </td>
-                            <td class="align-middle">
+                            <td class="align-middle text-center">
                                 @if($pr->department_code)
                                     @php
-                                        $deptDisplay = strtoupper($pr->department_code);
-                                        if ($deptDisplay === 'PROJECT MANAGEMENT ACCESSORIES')
-                                            $deptDisplay = 'PMA';
+                                        $deptName = $pr->department_code;
+                                        // Use dept_short_code from DB if available, otherwise generate abbreviation
+                                        if (!empty($pr->dept_short_code)) {
+                                            $deptDisplay = strtoupper($pr->dept_short_code);
+                                        } else {
+                                            $deptAbbreviations = [
+                                                'Project Management Accessories' => 'PMA',
+                                                'Project Management Wiring Harness' => 'PMWH',
+                                                'Cost Analyst' => 'CA',
+                                                'Product Innovation Development' => 'PID',
+                                                'Project Management Power & Energy Industrial Solution' => 'PMPEIS',
+                                                'Finance Accounting' => 'FA',
+                                                'Purchasing & Procurement' => 'PNP',
+                                                'Division Head' => 'DH',
+                                            ];
+                                            $deptDisplay = $deptAbbreviations[$deptName] ?? strtoupper(
+                                                implode('', array_map(fn($w) => $w[0] ?? '', preg_split('/\s+/', $deptName)))
+                                            );
+                                        }
                                     @endphp
-                                    <span class="badge"
-                                        style="background-color: #f59e0b; color: #fff; font-size: 0.65rem;">{{ $deptDisplay }}</span>
+                                    <span class="badge rounded-pill fw-semibold" title="{{ $deptName }}"
+                                        style="background-color: #1e40af; color: #fff; font-size: 0.7rem; padding: 0.3rem 0.6rem; letter-spacing: 0.5px;">
+                                        {{ $deptDisplay }}
+                                    </span>
                                 @elseif($pr->project_code)
                                     @php
-                                        $projDisplay = strtoupper($pr->project_code);
-                                        if ($projDisplay === 'PROJECT MANAGEMENT ACCESSORIES')
-                                            $projDisplay = 'PMA';
+                                        $projName = $pr->project_code;
+                                        $projAbbreviations = [
+                                            'Project Management Accessories' => 'PMA',
+                                            'Project Management Wiring Harness' => 'PMWH',
+                                        ];
+                                        $projDisplay = $projAbbreviations[$projName] ?? strtoupper(
+                                            implode('', array_map(fn($w) => $w[0] ?? '', preg_split('/\s+/', $projName)))
+                                        );
                                     @endphp
-                                    <span class="badge"
-                                        style="background-color: #3b82f6; color: #fff; font-size: 0.65rem;">{{ $projDisplay }}</span>
+                                    <span class="badge rounded-pill fw-semibold" title="{{ $projName }}"
+                                        style="background-color: #6366f1; color: #fff; font-size: 0.7rem; padding: 0.3rem 0.6rem; letter-spacing: 0.5px;">
+                                        {{ $projDisplay }}
+                                    </span>
                                 @else
                                     <span class="text-muted">-</span>
                                 @endif
@@ -282,9 +322,8 @@
                                         <span class="text-muted" style="font-size: 0.7rem;">Click to expand</span>
                                     </div>
 
-                                    <!-- Items detail - hidden by default -->
-                                    <div class="items-detail mt-2"
-                                        style="display: none; padding: 8px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 4px;">
+                                    <!-- Items detail - hidden by default, positioned as overlay -->
+                                    <div class="items-detail items-detail-overlay mt-2">
                                         @foreach($prItems as $item)
                                             <div
                                                 class="d-flex justify-content-between align-items-center {{ !$loop->last ? 'border-bottom pb-2 mb-2' : '' }}">
@@ -431,6 +470,25 @@
 
 @push('scripts')
     <script>
+        // Show SweetAlert for session messages (import result)
+        @if(session('success'))
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil!',
+                text: @json(session('success')),
+                confirmButtonColor: '#28a745',
+                timer: 4000,
+                timerProgressBar: true
+            });
+        @endif
+        @if(session('error'))
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal!',
+                html: @json(session('error')),
+                confirmButtonColor: '#dc3545'
+            });
+        @endif
         // Fix dropdown inside table-responsive causing scrollbar
         document.querySelectorAll('.table-responsive').forEach(function(el) {
             el.addEventListener('show.bs.dropdown', function() {
@@ -456,8 +514,23 @@
             const detailDiv = summaryElement.nextElementSibling;
             const chevronIcon = summaryElement.querySelector('.chevron-icon');
             const expandText = summaryElement.querySelector('.text-muted');
+            const isHidden = detailDiv.style.display === 'none' || detailDiv.style.display === '';
 
-            if (detailDiv.style.display === 'none') {
+            // Close all other open expands first
+            document.querySelectorAll('.items-detail-overlay').forEach(function(el) {
+                if (el !== detailDiv) {
+                    el.style.display = 'none';
+                    const parentSummary = el.previousElementSibling;
+                    if (parentSummary) {
+                        const icon = parentSummary.querySelector('.chevron-icon');
+                        const text = parentSummary.querySelector('.text-muted');
+                        if (icon) icon.style.transform = 'rotate(0deg)';
+                        if (text) text.textContent = 'Click to expand';
+                    }
+                }
+            });
+
+            if (isHidden) {
                 // Expand
                 detailDiv.style.display = 'block';
                 chevronIcon.style.transform = 'rotate(90deg)';
@@ -469,5 +542,84 @@
                 expandText.textContent = 'Click to expand';
             }
         }
+
+        // Import Excel validation & submission
+        document.getElementById('importFile').addEventListener('change', function() {
+            const resultDiv = document.getElementById('importValidationResult');
+            resultDiv.style.display = 'none';
+            resultDiv.innerHTML = '';
+
+            const file = this.files[0];
+            if (!file) return;
+
+            const validExts = ['.xlsx', '.xls'];
+            const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+            if (!validExts.includes(ext)) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Format File Salah',
+                    html: 'File harus berformat <b>.xlsx</b> atau <b>.xls</b>.<br>File yang dipilih: <code>' + file.name + '</code>',
+                    confirmButtonColor: '#dc3545'
+                });
+                this.value = '';
+                return;
+            }
+
+            // Validate via AJAX
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('_token', '{{ csrf_token() }}');
+
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'alert alert-secondary small';
+            resultDiv.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Memvalidasi format file...';
+
+            fetch('{{ route("pr.validate-import") }}', { method: 'POST', body: formData })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.valid) {
+                        resultDiv.className = 'alert alert-success small';
+                        resultDiv.innerHTML = '<i class="fas fa-check-circle me-1"></i> Format valid, siap diimport.';
+                    } else {
+                        resultDiv.className = 'alert alert-danger small';
+                        resultDiv.innerHTML = '<i class="fas fa-times-circle me-1"></i> Format tidak sesuai template.';
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Format Tidak Sesuai',
+                            text: 'Harap periksa kembali dokumennya.',
+                            confirmButtonColor: '#dc3545'
+                        });
+                    }
+                })
+                .catch(() => {
+                    resultDiv.style.display = 'none';
+                });
+        });
+
+        document.getElementById('importExcelForm').addEventListener('submit', function(e) {
+            const fileInput = document.getElementById('importFile');
+            if (!fileInput.files.length) {
+                e.preventDefault();
+                Swal.fire({ icon: 'warning', title: 'Pilih File', text: 'Silakan pilih file Excel terlebih dahulu.', confirmButtonColor: '#3085d6' });
+                return;
+            }
+            const btn = document.getElementById('importSubmitBtn');
+            const spinner = document.getElementById('importSpinner');
+            btn.disabled = true;
+            spinner.classList.remove('d-none');
+        });
+
+        // Reset modal to clean state when closed
+        document.getElementById('importExcelModal').addEventListener('hidden.bs.modal', function() {
+            document.getElementById('importFile').value = '';
+            const resultDiv = document.getElementById('importValidationResult');
+            resultDiv.style.display = 'none';
+            resultDiv.innerHTML = '';
+            const btn = document.getElementById('importSubmitBtn');
+            btn.disabled = false;
+            document.getElementById('importSpinner').classList.add('d-none');
+        });
+
+
     </script>
 @endpush

@@ -1,6 +1,16 @@
 @extends('layouts.app')
 
 @section('content')
+    <style>
+        .budget-items-detail {
+            max-height: 220px;
+            overflow-y: auto;
+            padding: 8px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+        }
+    </style>
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
         <div>
             <h4 class="fw-bold mb-1" style="color: #1e3a5f;">Budget Investment Plan</h4>
@@ -74,7 +84,14 @@
                         </div>
                         <div class="col-6">
                             <div class="text-muted" style="font-size: 0.7rem;">Dept</div>
-                            <div class="fw-medium text-dark">{{ $plan->department ? strtoupper($plan->department) : '-' }}</div>
+                            @if($plan->department)
+                                <span class="badge rounded-pill fw-semibold" title="{{ $plan->dept_full_name ?? $plan->department }}"
+                                    style="background-color: #1e40af; color: #fff; font-size: 0.7rem; padding: 0.3rem 0.6rem; letter-spacing: 0.5px;">
+                                    {{ strtoupper($plan->department) }}
+                                </span>
+                            @else
+                                <div class="fw-medium text-dark">-</div>
+                            @endif
                         </div>
                         <div class="col-6">
                             <div class="text-muted" style="font-size: 0.7rem;">Items</div>
@@ -97,36 +114,30 @@
 
     <div class="card border-0 shadow-sm d-none d-md-block">
         <div class="card-body p-0">
-            <div class="table-responsive" style="overflow: visible;">
-                <table class="table table-hover mb-0" id="tableBudget" style="font-size: 0.85rem; table-layout: fixed;">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="tableBudget" style="font-size: 0.85rem; min-width: 1100px;">
                     <colgroup>
-                        <col style="width: 9%;">
+                        <col style="width: 8%;">
                         <col style="width: 5%;">
-                        <col style="width: 14%;">
-                        <col style="width: 5%;">
-                        <col style="width: 16%;">
-                        <col style="width: 25%;">
+                        <col style="width: 13%;">
+                        <col style="width: 10%;">
+                        <col style="width: 10%;">
+                        <col style="width: 27%;">
                         <col style="width: 11%;">
                         <col style="width: 8%;">
                         <col style="width: 5%;">
                     </colgroup>
                     <thead class="bg-light">
                         <tr>
-                            <th class="ps-4 text-uppercase text-muted small fw-semibold" style="font-size: 0.7rem;">IO
-                                Number</th>
+                            <th class="ps-4 text-uppercase text-muted small fw-semibold text-nowrap" style="font-size: 0.7rem;">IO Number</th>
                             <th class="text-uppercase text-muted small fw-semibold" style="font-size: 0.7rem;">CC</th>
                             <th class="text-uppercase text-muted small fw-semibold" style="font-size: 0.7rem;">Customer</th>
                             <th class="text-uppercase text-muted small fw-semibold" style="font-size: 0.7rem;">Dept</th>
-                            <th class="text-uppercase text-muted small fw-semibold" style="font-size: 0.7rem;">Project Name
-                            </th>
-                            <th class="text-uppercase text-muted small fw-semibold" style="font-size: 0.7rem;">Machine /
-                                Equipment</th>
-                            <th class="text-uppercase text-muted small fw-semibold text-end" style="font-size: 0.7rem;">
-                                Total Amount</th>
-                            <th class="text-uppercase text-muted small fw-semibold text-center" style="font-size: 0.7rem;">
-                                Status</th>
-                            <th class="text-uppercase text-muted small fw-semibold text-center pe-4"
-                                style="font-size: 0.7rem;">Actions</th>
+                            <th class="text-uppercase text-muted small fw-semibold text-nowrap" style="font-size: 0.7rem;">Project Name</th>
+                            <th class="text-uppercase text-muted small fw-semibold text-nowrap" style="font-size: 0.7rem;">Machine / Equipment</th>
+                            <th class="text-uppercase text-muted small fw-semibold text-end text-nowrap" style="font-size: 0.7rem;">Total Amount</th>
+                            <th class="text-uppercase text-muted small fw-semibold text-center" style="font-size: 0.7rem;">Status</th>
+                            <th class="text-uppercase text-muted small fw-semibold text-center pe-4" style="font-size: 0.7rem;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -140,15 +151,17 @@
                                         <div class="small text-muted fw-normal" style="font-size: 0.75rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ $plan->model }}</div>
                                     @endif
                                 </td>
-                                <td class="align-middle">
+                                <td class="align-middle" style="overflow: visible; white-space: nowrap;">
                                     @if($plan->department)
-                                        <span class="badge"
-                                            style="background-color: #f59e0b; color: #fff; font-size: 0.65rem;">{{ strtoupper($plan->department) }}</span>
+                                        <span class="badge rounded-pill fw-semibold" title="{{ $plan->dept_full_name ?? $plan->department }}"
+                                            style="background-color: #1e40af; color: #fff; font-size: 0.7rem; padding: 0.3rem 0.6rem; letter-spacing: 0.5px;">
+                                            {{ strtoupper($plan->department) }}
+                                        </span>
                                     @else
                                         -
                                     @endif
                                 </td>
-                                <td class="fw-semibold align-middle" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ $plan->project->project_name ?? '-' }}</td>
+                                <td class="fw-semibold align-middle" style="word-wrap: break-word; white-space: normal;">{{ $plan->project->project_name ?? '-' }}</td>
                                 <td class="align-middle" style="overflow: hidden; word-wrap: break-word;">
                                     @php
                                         $itemCount = $plan->items->count();
@@ -169,18 +182,24 @@
                                         </div>
 
                                         <!-- Items detail - hidden by default -->
-                                        <div class="items-detail" style="display: none;">
+                                        <div class="items-detail budget-items-detail" style="display: none;">
                                             @foreach($plan->items as $item)
                                                 <div
                                                     class="d-flex justify-content-between align-items-center {{ !$loop->last ? 'border-bottom pb-2 mb-2' : '' }}">
                                                     <div style="flex: 1;">
-                                                        <div class="fw-semibold">{{ $item->item_name }}</div>
-                                                        <small class="text-muted">FY {{ $plan->fiscal_year }}</small>
+                                                        @php
+                                                            $prefix = $item->item_code . '.' . $item->item_no;
+                                                            $proc = strtolower($item->process ?? '');
+                                                            if (str_contains($proc, 'preparation')) {
+                                                                $prefix .= ' PP';
+                                                            } elseif (str_contains($proc, 'final')) {
+                                                                $prefix .= ' FA';
+                                                            }
+                                                        @endphp
+                                                        <div class="fw-semibold">{{ $prefix }} {{ $item->item_name }}</div>
                                                     </div>
                                                     <div class="text-center" style="width: 100px;">
                                                         <div class="fw-medium">{{ $item->qty }} {{ $item->uom }}</div>
-                                                        <small
-                                                            class="text-muted text-capitalize">{{ $item->process ?? 'Preparation' }}</small>
                                                     </div>
                                                     <div class="text-end" style="width: 120px;">
                                                         <span>Rp {{ number_format($item->total_amount, 0, ',', '.') }}</span>
@@ -278,6 +297,16 @@
 
 @push('scripts')
     <script>
+        // Fix dropdown inside table-responsive causing scrollbar
+        document.querySelectorAll('.table-responsive').forEach(function(el) {
+            el.addEventListener('show.bs.dropdown', function() {
+                this.style.overflow = 'visible';
+            });
+            el.addEventListener('hide.bs.dropdown', function() {
+                this.style.overflow = 'auto';
+            });
+        });
+
         // Search functionality
         document.getElementById('searchBudget').addEventListener('keydown', function (e) {
             if (e.key === 'Enter') {
@@ -294,8 +323,23 @@
             const detailDiv = summaryElement.nextElementSibling;
             const chevronIcon = summaryElement.querySelector('.chevron-icon');
             const expandText = summaryElement.querySelector('.text-muted.small');
+            const isHidden = detailDiv.style.display === 'none' || detailDiv.style.display === '';
 
-            if (detailDiv.style.display === 'none') {
+            // Close all other open expands first
+            document.querySelectorAll('.budget-items-detail').forEach(function(el) {
+                if (el !== detailDiv) {
+                    el.style.display = 'none';
+                    const parentSummary = el.previousElementSibling;
+                    if (parentSummary) {
+                        const icon = parentSummary.querySelector('.chevron-icon');
+                        const text = parentSummary.querySelector('.text-muted.small');
+                        if (icon) icon.style.transform = 'rotate(0deg)';
+                        if (text) text.textContent = 'Click to expand';
+                    }
+                }
+            });
+
+            if (isHidden) {
                 // Expand
                 detailDiv.style.display = 'block';
                 chevronIcon.style.transform = 'rotate(90deg)';

@@ -134,9 +134,9 @@
             <div class="card-body p-4">
                 <div class="row g-3 mb-3">
                     <div class="col-md-6">
-                        <label class="small fw-bold text-muted mb-1">DEPARTMENT</label>
-                        <select name="department" class="form-select bg-light" {{ !$is_editable ? 'disabled' : '' }}>
-                            <option value="">-- Select Dept --</option>
+                        <label class="small fw-bold text-muted mb-1">DEPARTMENT <span class="text-danger">*</span></label>
+                        <select name="department" class="form-select form-select-sm" {{ !$is_editable ? 'disabled' : '' }} required>
+                            <option value="">Select Dept</option>
                             @foreach($depts as $d)
                             <option value="{{ $d->dept_name }}" {{ $header['department'] == $d->dept_name ? 'selected' : '' }}>{{ $d->dept_code }} | {{ $d->dept_name }}</option>
                             @endforeach
@@ -146,9 +146,35 @@
                         </select>
                     </div>
                     <div class="col-md-6">
+                        <label class="small fw-bold text-muted mb-1">IO NUMBER <span class="text-danger">*</span></label>
+                        <select name="io_number" class="form-select form-select-sm" {{ !$is_editable ? 'disabled' : '' }} required>
+                             <option value="">Select IO</option>
+                            @foreach($ios as $io)
+                            <option value="{{ $io->io_number }}" {{ $header['io_number'] == $io->io_number ? 'selected' : '' }}>{{ $io->io_number }} - {{ $io->project_name }} (Sisa: Rp {{ number_format($io->remaining, 0, ',', '.') }})</option>
+                            @endforeach
+                             @if(!collect($ios)->contains('io_number', $header['io_number']))
+                                <option value="{{ $header['io_number'] }}" selected>{{ $header['io_number'] }}</option>
+                            @endif
+                        </select>
+                    </div>
+                </div>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="small fw-bold text-muted mb-1">COST CENTER <span class="text-danger">*</span></label>
+                        <select name="cost_center" class="form-select form-select-sm" {{ !$is_editable ? 'disabled' : '' }} required>
+                            <option value="">Select Cost Center</option>
+                            @foreach($ccs as $cc)
+                            <option value="{{ $cc->cc_code }}" {{ isset($header['cost_center']) && $header['cost_center'] == $cc->cc_code ? 'selected' : '' }}>{{ $cc->cc_code }} - {{ $cc->cc_name }}</option>
+                            @endforeach
+                            @if(isset($header['cost_center']) && $header['cost_center'] !== '-' && !collect($ccs)->contains('cc_code', $header['cost_center']))
+                                <option value="{{ $header['cost_center'] }}" selected>{{ $header['cost_center'] }}</option>
+                            @endif
+                        </select>
+                    </div>
+                    <div class="col-md-6">
                         <label class="small fw-bold text-muted mb-1">BUSINESS CATEGORY</label>
-                        <select name="category" class="form-select bg-light" {{ !$is_editable ? 'disabled' : '' }}>
-                            <option value="">-- Select Category --</option>
+                        <select name="category" class="form-select form-select-sm" {{ !$is_editable ? 'disabled' : '' }}>
+                            <option value="">Select Category</option>
                             @foreach($cats as $c)
                             <option value="{{ $c->category_name }}" {{ isset($header['category']) && $header['category'] == $c->category_name ? 'selected' : '' }}>{{ $c->category_code }} | {{ $c->category_name }}</option>
                             @endforeach
@@ -158,38 +184,11 @@
                         </select>
                     </div>
                 </div>
-                <!-- ... (Repeat logic for IO, Cost Center, Plant) ... -->
-                <div class="row g-3 mb-3">
-                    <div class="col-md-6">
-                        <label class="small fw-bold text-muted mb-1">IO NUMBER</label>
-                        <select name="io_number" class="form-select bg-light" {{ !$is_editable ? 'disabled' : '' }}>
-                             <option value="">-- Select IO --</option>
-                            @foreach($ios as $io)
-                            <option value="{{ $io->io_number }}" {{ $header['io_number'] == $io->io_number ? 'selected' : '' }}>{{ $io->io_number }} - {{ $io->description }}</option>
-                            @endforeach
-                             @if(!collect($ios)->contains('io_number', $header['io_number']))
-                                <option value="{{ $header['io_number'] }}" selected>{{ $header['io_number'] }}</option>
-                            @endif
-                        </select>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="small fw-bold text-muted mb-1">COST CENTER</label>
-                        <select name="cost_center" class="form-select bg-light" {{ !$is_editable ? 'disabled' : '' }}>
-                            <option value="">-- Select Cost Center --</option>
-                            @foreach($ccs as $cc)
-                            <option value="{{ $cc->cc_code }}" {{ isset($header['cost_center']) && $header['cost_center'] == $cc->cc_code ? 'selected' : '' }}>{{ $cc->cc_code }} - {{ $cc->cc_name }}</option>
-                            @endforeach
-                            @if(isset($header['cost_center']) && $header['cost_center'] !== '-' && !collect($ccs)->contains('cc_code', $header['cost_center']))
-                                <option value="{{ $header['cost_center'] }}" selected>{{ $header['cost_center'] }}</option>
-                            @endif
-                        </select>
-                    </div>
-                </div>
                 <div class="row g-3">
                     <div class="col-md-4">
-                        <label class="small fw-bold text-muted mb-1">PLANT</label>
-                        <select name="plant" class="form-select bg-light" {{ !$is_editable ? 'disabled' : '' }}>
-                            <option value="">-- Select Plant --</option>
+                        <label class="small fw-bold text-muted mb-1">PLANT <span class="text-danger">*</span></label>
+                        <select name="plant" class="form-select form-select-sm" {{ !$is_editable ? 'disabled' : '' }} required>
+                            <option value="">Select Plant</option>
                             @foreach($plants as $p)
                             <option value="{{ $p->plant_code }}" {{ $header['plant'] == $p->plant_code ? 'selected' : '' }}>{{ $p->plant_code }} - {{ $p->plant_name }}</option>
                             @endforeach
@@ -199,9 +198,9 @@
                         </select>
                     </div>
                     <div class="col-md-4">
-                        <label class="small fw-bold text-muted mb-1">S.LOC</label>
-                        <select name="storage_location" class="form-select bg-light" {{ !$is_editable ? 'disabled' : '' }}>
-                            <option value="">-- Select S.Loc --</option>
+                        <label class="small fw-bold text-muted mb-1">STORAGE LOCATION</label>
+                        <select name="storage_location" class="form-select form-select-sm" {{ !$is_editable ? 'disabled' : '' }}>
+                            <option value="">Select S.Loc</option>
                             @foreach($slocs as $sloc)
                             <option value="{{ $sloc->sloc }}" {{ isset($header['storage_location']) && $header['storage_location'] == $sloc->sloc ? 'selected' : '' }}>{{ $sloc->sloc }} | {{ $sloc->description }}</option>
                             @endforeach
@@ -212,7 +211,7 @@
                     </div>
                     <div class="col-md-4">
                         <label class="small fw-bold text-muted mb-1">DUE DATE</label>
-                        <input type="date" name="due_date" class="form-control bg-light" value="{{ $header['due_date'] ?? '' }}" {{ !$is_editable ? 'disabled' : '' }}>
+                        <input type="date" name="due_date" class="form-control form-control-sm" value="{{ $header['due_date'] ?? '' }}" {{ !$is_editable ? 'disabled' : '' }}>
                     </div>
                 </div>
             </div>

@@ -47,6 +47,7 @@ Route::middleware('auth')->group(function () {
     Route::get('pr/reject/{pr_number}', [PurchaseRequestController::class, 'reject'])->name('pr.reject')->where('pr_number', '.*');
     Route::get('pr/print/{pr_number}', [PurchaseRequestController::class, 'print'])->name('pr.print')->where('pr_number', '.*');
     Route::post('pr/import', [PurchaseRequestController::class, 'import'])->name('pr.import');
+    Route::post('pr/validate-import', [PurchaseRequestController::class, 'validateImport'])->name('pr.validate-import');
     Route::resource('pr', PurchaseRequestController::class);
 
     // Purchase Order Routes
