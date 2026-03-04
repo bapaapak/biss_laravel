@@ -60,7 +60,7 @@
                     </form>
                 @endif
 
-                <a href="{{ route('budget.index') }}" class="btn btn-light btn-sm rounded-circle shadow-sm">
+                <a href="{{ route('budget.index') }}" class="btn btn-light btn-sm rounded-circle shadow-sm" onclick="return confirmLeave(event)">
                     <i class="fas fa-times"></i>
                 </a>
             </div>
@@ -98,7 +98,7 @@
                     <div class="col-md-2">
                         <label class="form-label text-uppercase text-muted small fw-bold" style="font-size: 0.7rem;">Fiscal
                             Year</label>
-                        <select name="fiscal_year" class="form-select form-select-sm border-0 shadow-sm" {{ !$isEditable ? 'disabled' : '' }}>
+                        <select name="fiscal_year" class="form-select form-select-sm" style="border: 1px solid #ced4da; background-color: #f8f9fa;" {{ !$isEditable ? 'disabled' : '' }}>
                             @for($y = date('Y') + 1; $y >= date('Y') - 5; $y--)
                                 <option value="{{ $y }}" {{ $plan->fiscal_year == $y ? 'selected' : '' }}>{{ $y }}</option>
                             @endfor
@@ -106,8 +106,8 @@
                     </div>
                     <div class="col-md-3">
                         <label class="form-label text-uppercase text-muted small fw-bold"
-                            style="font-size: 0.7rem;">Department</label>
-                        <select name="department" class="form-select form-select-sm border-0 shadow-sm" required {{ !$isEditable ? 'disabled' : '' }}>
+                            style="font-size: 0.7rem;">Department <span class="text-danger">*</span></label>
+                        <select name="department" class="form-select form-select-sm" style="border: 1px solid #ced4da; background-color: #f8f9fa;" required {{ !$isEditable ? 'disabled' : '' }}>
                             <option value="">-- Select Dept --</option>
                             @foreach($departments as $dept)
                                 <option value="{{ $dept->dept_code }}" {{ $plan->department == $dept->dept_code ? 'selected' : '' }}>{{ $dept->dept_code }} - {{ $dept->dept_name }}</option>
@@ -116,8 +116,8 @@
                     </div>
                     <div class="col-md-3">
                         <label class="form-label text-uppercase text-muted small fw-bold" style="font-size: 0.7rem;">Cost
-                            Center</label>
-                        <select name="cost_center" class="form-select form-select-sm border-0 shadow-sm" required {{ !$isEditable ? 'disabled' : '' }}>
+                            Center <span class="text-danger">*</span></label>
+                        <select name="cost_center" class="form-select form-select-sm" style="border: 1px solid #ced4da; background-color: #f8f9fa;" required {{ !$isEditable ? 'disabled' : '' }}>
                             <option value="">-- Select CC --</option>
                             @foreach($ccs as $cc)
                                 <option value="{{ $cc->cc_code }}" {{ $plan->cc_code == $cc->cc_code ? 'selected' : '' }}>
@@ -132,8 +132,8 @@
                 <div class="row g-3 mb-4">
                     <div class="col-md-4">
                         <label class="form-label text-uppercase text-muted small fw-bold" style="font-size: 0.7rem;">Project
-                            / IO Reference</label>
-                        <select id="projectIoSelect" class="form-select border-0 shadow-sm" onchange="updateProjectIo(this)"
+                            / IO Reference <span class="text-danger">*</span></label>
+                        <select id="projectIoSelect" class="form-select" style="border: 1px solid #ced4da; background-color: #f8f9fa;" onchange="updateProjectIo(this)"
                             required {{ !$isEditable ? 'disabled' : '' }}>
                             <option value="">-- Select Project/IO --</option>
                             @foreach($ios as $io)
@@ -148,8 +148,8 @@
                     </div>
                     <div class="col-md-3">
                         <label class="form-label text-uppercase text-muted small fw-bold"
-                            style="font-size: 0.7rem;">Customer</label>
-                        <select name="customer" class="form-select border-0 shadow-sm" required {{ !$isEditable ? 'disabled' : '' }}>
+                            style="font-size: 0.7rem;">Customer <span class="text-danger">*</span></label>
+                        <select name="customer" class="form-select" style="border: 1px solid #ced4da; background-color: #f8f9fa;" required {{ !$isEditable ? 'disabled' : '' }}>
                             <option value="">-- Select Customer --</option>
                             @foreach($customers as $cust)
                                 <option value="{{ $cust->customer_name }}" {{ ($plan->customer == $cust->customer_name || $plan->customer == $cust->customer_code) ? 'selected' : '' }}>
@@ -160,8 +160,8 @@
                     </div>
                     <div class="col-md-2">
                         <label class="form-label text-uppercase text-muted small fw-bold"
-                            style="font-size: 0.7rem;">Model</label>
-                        <input type="text" name="model" class="form-control border-0 shadow-sm"
+                            style="font-size: 0.7rem;">Model <span class="text-danger">*</span></label>
+                        <input type="text" name="model" class="form-control" style="border: 1px solid #ced4da; background-color: #f8f9fa;"
                             value="{{ $plan->model ?? '' }}" placeholder="Model Name" style="text-transform: uppercase;" {{ !$isEditable ? 'disabled' : '' }} oninput="this.value = this.value.toUpperCase()">
                     </div>
                     <div class="col-md-3">
@@ -200,127 +200,156 @@
                     </div>
 
                     <!-- Add Item Row (Toggleable) -->
-                    <div id="addItemRow" class="card border-0 bg-light mb-4 shadow-sm"
-                        style="display: none; border-radius: 12px;">
-                        <div class="card-body p-3">
-                            <div class="row g-3 mb-3">
-                                <div class="col-md-2">
-                                    <label class="form-label text-uppercase text-muted small fw-bold"
-                                        style="font-size: 0.65rem;">Code</label>
-                                    <input type="text" id="item_code" class="form-control form-control-sm border-0"
-                                        placeholder="A/B">
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label text-uppercase text-muted small fw-bold"
-                                        style="font-size: 0.65rem;">Category</label>
-                                    <input type="text" id="item_category" class="form-control form-control-sm border-0"
-                                        list="category_list">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label text-uppercase text-muted small fw-bold"
-                                        style="font-size: 0.65rem;">Name</label>
-                                    <input type="text" id="item_name" class="form-control form-control-sm border-0"
-                                        onblur="this.value = toFlexibleProperCase(this.value)">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label text-uppercase text-muted small fw-bold"
-                                        style="font-size: 0.65rem;">Brand / Spec</label>
-                                    <input type="text" id="item_brand" class="form-control form-control-sm border-0"
-                                        onblur="this.value = toFlexibleProperCase(this.value)">
-                                </div>
-                            </div>
-                            <div class="row g-3 mb-3">
-                                <div class="col-md-4">
-                                    <label class="form-label text-uppercase text-muted small fw-bold"
-                                        style="font-size: 0.65rem;">App Process</label>
-                                    <input type="text" id="item_app_process" class="form-control form-control-sm border-0"
-                                        onblur="this.value = toFlexibleProperCase(this.value)">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label text-uppercase text-muted small fw-bold"
-                                        style="font-size: 0.65rem;">Process Section</label>
-                                    <select id="item_process" class="form-select form-select-sm border-0">
-                                        <option value="Preparation">Preparation</option>
-                                        <option value="Final Assy">Final Assy</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label text-uppercase text-muted small fw-bold"
-                                        style="font-size: 0.65rem;">Qty</label>
-                                    <input type="number" id="item_qty" class="form-control form-control-sm border-0"
-                                        value="1">
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label text-uppercase text-muted small fw-bold"
-                                        style="font-size: 0.65rem;">Unit Cost (IDR)</label>
-                                    <input type="text" id="item_price_display" class="form-control form-control-sm border-0"
-                                        value="0" oninput="formatNumber(this)" onchange="formatNumber(this)" onpaste="setTimeout(() => formatNumber(this), 0)">
-                                    <input type="hidden" id="item_price" value="0">
-                                </div>
-                            </div>
-                            <div class="row g-3 mb-3">
-                                <div class="col-md-3">
-                                    <label class="form-label text-uppercase text-muted small fw-bold"
-                                        style="font-size: 0.65rem;">Condition Status</label>
-                                    <select id="item_condition_status" class="form-select form-select-sm border-0">
-                                        <option value="Ready">Ready</option>
-                                        <option value="Not Ready">Not Ready</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label text-uppercase text-muted small fw-bold"
-                                        style="font-size: 0.65rem;">Condition Notes</label>
-                                    <input type="text" id="item_condition_notes"
-                                        class="form-control form-control-sm border-0"
-                                        onblur="this.value = toFlexibleProperCase(this.value)">
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label text-uppercase text-muted small fw-bold"
-                                        style="font-size: 0.65rem;">Target Schedule</label>
-                                    <input type="date" id="item_schedule" class="form-control form-control-sm border-0">
-                                </div>
-                            </div>
+                    <div id="addItemRow" class="border rounded-4 p-4 mb-4 bg-white shadow-sm item-form"
+                        style="display: none; border-style: dashed !important; border-width: 2px !important;">
+                        <style>
+                            .item-form .form-control, .item-form .form-select {
+                                border: 1px solid #ced4da !important;
+                                background-color: #f8f9fa !important;
+                            }
+                            .item-form .form-control:focus, .item-form .form-select:focus {
+                                background-color: #fff !important;
+                                border-color: #86b7fe !important;
+                                box-shadow: 0 0 0 0.2rem rgba(13,110,253,.15) !important;
+                            }
+                            .item-form .input-group-text {
+                                border: 1px solid #ced4da !important;
+                            }
+                        </style>
+                        <h6 class="fw-bold mb-3 text-primary d-flex align-items-center">
+                            <i class="fas fa-plus-circle me-2"></i> Add Item Details
+                        </h6>
 
-                            <!-- Breakdown Section -->
-                            <div class="form-check mb-3">
-                                <input class="form-check-input" type="checkbox" id="has_breakdown"
-                                    onchange="toggleBreakdown()">
-                                <label class="form-check-label small fw-bold text-muted" for="has_breakdown">
-                                    Has Details / Breakdown Components?
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-1">
+                                <label class="form-label small fw-bold text-muted">No</label>
+                                <input type="number" id="item_no" class="form-control form-control-sm" placeholder="1" min="1">
+                            </div>
+                            <div class="col-md-1">
+                                <label class="form-label small fw-bold text-muted">Code</label>
+                                <input type="text" id="item_code" class="form-control form-control-sm" placeholder="A/B"
+                                    style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small fw-bold text-muted">Category</label>
+                                <input type="text" id="item_category" class="form-control form-control-sm" list="category_list"
+                                    style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small fw-bold text-muted">Section / Process</label>
+                                <select id="item_process" class="form-select form-select-sm">
+                                    <option value="Preparation Process">Preparation Process</option>
+                                    <option value="Final Assy Process">Final Assy Process</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-muted">Machine / Equipment Name</label>
+                                <input type="text" id="item_name" class="form-control form-control-sm"
+                                    placeholder="Full name of the item" onblur="this.value = toFlexibleProperCase(this.value)">
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold text-muted">Brand / Spec</label>
+                                <input type="text" id="item_brand" class="form-control form-control-sm"
+                                    placeholder="e.g., Fanuc / High Speed"
+                                    onblur="this.value = toFlexibleProperCase(this.value)">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold text-muted">Application Process</label>
+                                <input type="text" id="item_app_process" class="form-control form-control-sm"
+                                    placeholder="e.g., Milling Case Engine"
+                                    onblur="this.value = toFlexibleProperCase(this.value)">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small fw-bold text-muted">Qty</label>
+                                <div class="input-group input-group-sm">
+                                    <input type="number" id="item_qty" class="form-control" value="1" min="1">
+                                    <select id="item_uom" class="form-select form-select-sm" style="min-width: 100px;">
+                                        <option value="Unit">Unit</option>
+                                        <option value="Set">Set</option>
+                                        <option value="Pcs">Pcs</option>
+                                        <option value="Titik">Titik</option>
+                                        <option value="Lot">Lot</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small fw-bold text-muted">Cost (Unit)</label>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text bg-light">IDR</span>
+                                    <input type="text" id="item_price_display" class="form-control" value="0"
+                                        oninput="formatNumber(this)" onchange="formatNumber(this)" onpaste="setTimeout(() => formatNumber(this), 0)">
+                                </div>
+                                <input type="hidden" id="item_price" value="0">
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-3">
+                                <label class="form-label small fw-bold text-muted">Condition</label>
+                                <select id="item_condition_status" class="form-select form-select-sm">
+                                    <option value="Ready">Ready</option>
+                                    <option value="Not Ready">Not Ready</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-muted">Notes / Reason (Not Ready)</label>
+                                <input type="text" id="item_condition_notes" class="form-control form-control-sm"
+                                    placeholder="Reason if not ready" onblur="this.value = toFlexibleProperCase(this.value)">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-bold text-muted">Target Schedule</label>
+                                <input type="text" id="item_schedule" class="form-control form-control-sm"
+                                    placeholder="e.g., Q3 2026">
+                            </div>
+                        </div>
+
+                        <!-- Breakdown Section -->
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="has_breakdown" onchange="toggleBreakdown()">
+                                <label class="form-check-label fw-bold text-primary" for="has_breakdown">
+                                    <i class="fas fa-list-ul me-1"></i> Add Detail Breakdown (Components)
                                 </label>
                             </div>
+                        </div>
 
-                            <div id="breakdown_section" class="d-none mb-3 ps-3 border-start border-3 border-secondary">
-                                <h6 class="text-xs text-uppercase text-muted fw-bold mb-2">Breakdown Components</h6>
-                                <table class="table table-sm table-bordered mb-2" id="breakdown_table">
-                                    <thead class="table-light">
-                                        <tr class="text-center small">
-                                            <th>Component Name</th>
-                                            <th>Brand / Spec</th>
-                                            <th>App Process</th>
-                                            <th width="10%">Qty</th>
-                                            <th width="20%">Price (Unit)</th>
-                                            <th width="5%"><i class="fas fa-trash-alt"></i></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="breakdown_table_body"></tbody>
-                                </table>
-                                <button type="button" class="btn btn-xs btn-outline-secondary rounded-pill"
-                                    onclick="addBreakdownRow()">
-                                    <i class="fas fa-plus me-1"></i> Add Component
-                                </button>
-                            </div>
+                        <div id="breakdown_section" class="d-none bg-light p-3 rounded-3 mb-3 border">
+                            <h6 class="small fw-bold text-muted mb-2">Breakdown Components</h6>
+                            <table class="table table-sm table-bordered bg-white mb-2" id="breakdown_table">
+                                <thead class="table-light">
+                                    <tr class="text-center small">
+                                        <th>Component Name</th>
+                                        <th>Brand / Spec</th>
+                                        <th>App Process</th>
+                                        <th width="10%">Qty</th>
+                                        <th width="20%">Price (Unit)</th>
+                                        <th width="5%"><i class="fas fa-trash-alt"></i></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="breakdown_table_body"></tbody>
+                            </table>
+                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill"
+                                onclick="addBreakdownRow()">
+                                <i class="fas fa-plus me-1"></i> Add Component
+                            </button>
+                        </div>
 
-                            <div class="text-end">
-                                <button type="button" class="btn btn-light btn-sm px-3 me-2" id="cancelEditBtn"
-                                    onclick="cancelEdit()" style="display: none;">Cancel Edit</button>
-                                <button type="button" class="btn btn-light btn-sm px-3 me-2"
-                                    onclick="hideAddItemRow()">Close Form</button>
-                                <button type="button" class="btn btn-primary btn-sm px-4" id="addItemBtn"
-                                    onclick="addItem()">Add to List</button>
-                                <button type="button" class="btn btn-warning btn-sm px-4 text-white d-none"
-                                    id="updateItemBtn" onclick="updateItem()">Update Item</button>
-                            </div>
+                        <div class="d-flex justify-content-end">
+                            <button type="button" class="btn btn-secondary px-4 shadow-sm d-none me-2" id="cancelEditBtn"
+                                onclick="cancelEdit()">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </button>
+                            <button type="button" class="btn btn-primary px-4 shadow-sm" id="addItemBtn"
+                                onclick="addItem()">
+                                <i class="fas fa-plus me-2"></i>Add to List
+                            </button>
+                            <button type="button" class="btn btn-warning px-4 shadow-sm d-none text-white" id="updateItemBtn"
+                                onclick="updateItem()">
+                                <i class="fas fa-save me-2"></i>Update Item
+                            </button>
                         </div>
                     </div>
 
@@ -483,7 +512,7 @@
 
         <div class="card-footer bg-white d-flex justify-content-between py-3 border-top">
             <div class="d-flex gap-2">
-                <a href="{{ route('budget.index') }}" class="btn btn-light px-4 rounded-pill">
+                <a href="{{ route('budget.index') }}" class="btn btn-light px-4 rounded-pill" onclick="return confirmLeave(event)">
                     <i class="fas fa-arrow-left me-2"></i>Back
                 </a>
                 <a href="{{ route('budget.print', $plan->id) }}" target="_blank"
@@ -561,8 +590,8 @@
                             <label class="form-label text-uppercase text-muted small fw-bold"
                                 style="font-size: 0.65rem;">Process Section</label>
                             <select id="edit_process" class="form-select">
-                                <option value="Preparation">Preparation</option>
-                                <option value="Final Assy">Final Assy</option>
+                                <option value="Preparation Process">Preparation Process</option>
+                                <option value="Final Assy Process">Final Assy Process</option>
                             </select>
                         </div>
                     </div>
@@ -710,11 +739,64 @@
 
 @push('scripts')
     <script>
-            // Initialize items with breakd    own structure
+            let formSubmitting = false;
+            let initialItemsJson = '';
+
+            function isFormDirty() {
+                // Compare current items with initial state
+                const currentJson = JSON.stringify(items.map(i => ({
+                    item_no: i.item_no, code: i.code, category: i.category, process: i.process,
+                    name: i.name, brand_spec: i.brand_spec, app_process: i.app_process,
+                    qty: i.qty, price: i.price, condition_status: i.condition_status,
+                    condition_notes: i.condition_notes, target_schedule: i.target_schedule
+                })));
+                if (currentJson !== initialItemsJson) return true;
+                // Check if add item form has data
+                const fields = ['item_no', 'item_code', 'item_name', 'item_brand', 'item_app_process', 'item_condition_notes', 'item_schedule'];
+                for (const id of fields) {
+                    const el = document.getElementById(id);
+                    if (el && el.value.trim() !== '') return true;
+                }
+                return false;
+            }
+
+            function confirmLeave(e) {
+                if (isFormDirty()) {
+                    e.preventDefault();
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Data Belum Disimpan',
+                        text: 'Anda memiliki data yang belum disimpan. Yakin ingin keluar?',
+                        showCancelButton: true,
+                        confirmButtonText: 'Ya, Keluar',
+                        cancelButtonText: 'Batal',
+                        confirmButtonColor: '#dc3545',
+                        cancelButtonColor: '#6c757d'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            formSubmitting = true;
+                            window.location.href = e.target.closest('a').href;
+                        }
+                    });
+                    return false;
+                }
+                return true;
+            }
+
+            // Browser back/refresh protection
+            window.addEventListener('beforeunload', function(e) {
+                if (!formSubmitting && isFormDirty()) {
+                    e.preventDefault();
+                    e.returnValue = '';
+                }
+            });
+
+            // Initialize items with breakdown structure
             let items = [
                 @foreach($plan->items->whereNull('parent_item_id') as $item)
                             {
                     id: {{ $item->id }},
+                    item_no: {{ $item->item_no ?? 0 }},
                     code: "{{ addslashes($item->item_code ?? '') }}",
                     category: "{{ addslashes($item->category ?? '') }}",
                     process: "{{ addslashes($item->process ?? 'Preparation') }}",
@@ -747,6 +829,14 @@
             let editingindex = -1;
 
             document.addEventListener('DOMContentLoaded', function () {
+                // Save initial state for dirty check
+                initialItemsJson = JSON.stringify(items.map(i => ({
+                    item_no: i.item_no, code: i.code, category: i.category, process: i.process,
+                    name: i.name, brand_spec: i.brand_spec, app_process: i.app_process,
+                    qty: i.qty, price: i.price, condition_status: i.condition_status,
+                    condition_notes: i.condition_notes, target_schedule: i.target_schedule
+                })));
+
                 renderTable();
                 const select = document.getElementById('projectIoSelect');
                 if (select && select.value) {
@@ -863,6 +953,7 @@
                 }
 
                 const data = {
+                    item_no: parseInt(document.getElementById('item_no').value) || 0,
                     code: document.getElementById('item_code').value,
                     category: document.getElementById('item_category').value,
                     process: document.getElementById('item_process').value,
@@ -913,6 +1004,7 @@
                 document.getElementById('updateItemBtn').classList.remove('d-none');
                 document.getElementById('cancelEditBtn').classList.remove('d-none');
 
+                document.getElementById('item_no').value = item.item_no || '';
                 document.getElementById('item_code').value = item.code;
                 document.getElementById('item_category').value = item.category;
                 document.getElementById('item_process').value = item.process;
@@ -951,6 +1043,7 @@
                 }
 
                 const data = {
+                    item_no: parseInt(document.getElementById('item_no').value) || 0,
                     code: document.getElementById('item_code').value,
                     category: document.getElementById('item_category').value,
                     process: document.getElementById('item_process').value,
@@ -998,6 +1091,7 @@
             }
 
             function resetForm() {
+                document.getElementById('item_no').value = '';
                 document.getElementById('item_code').value = '';
                 document.getElementById('item_category').value = '';
                 document.getElementById('item_name').value = '';
@@ -1059,7 +1153,7 @@
                 });
 
                 for (const key in grouped) {
-                    let originalIndexCounter = 1;
+                    let autoCounter = 1;
                     const headerRow = document.createElement('tr');
                     headerRow.className = 'table-light fw-bold';
                     headerRow.innerHTML = `<td colspan="11" class="py-2 text-uppercase text-muted" style="font-size: 0.75rem; letter-spacing: 0.5px;">${key}</td>`;
@@ -1074,7 +1168,7 @@
                         const row = document.createElement('tr');
                         row.className = `align-middle ${rowClass}`;
                         row.innerHTML = `
-                                    <td class="text-center">${originalIndexCounter++}</td>
+                                    <td class="text-center">${item.item_no || autoCounter++}</td>
                                     <td>
                                         <div class="fw-bold">${item.name}</div>
                                         ${item.has_breakdown ? '<div class="small text-muted fst-italic mt-1">Include:</div>' : ''}
@@ -1109,6 +1203,7 @@
 
                         // Add Hidden Inputs for Form Submission
                         let html = `
+                                    <input type="hidden" name="items[${index}][item_no]" value="${item.item_no || ''}">
                                     <input type="hidden" name="items[${index}][code]" value="${item.code}">
                                     <input type="hidden" name="items[${index}][category]" value="${item.category}">
                                     <input type="hidden" name="items[${index}][process]" value="${item.process}">
@@ -1216,6 +1311,8 @@
                     });
 
                     form.addEventListener('submit', function (e) {
+                        formSubmitting = true;
+
                         // Inject action as hidden input to ensure it reaches the server
                         let actionInput = form.querySelector('input[name="action"]');
                         if (!actionInput) {
@@ -1232,6 +1329,7 @@
                         // Create hidden inputs from JS items array
                         items.forEach((item, index) => {
                             const fields = {
+                                'item_no': item.item_no || '',
                                 'code': item.code || '',
                                 'category': item.category || '',
                                 'process': item.process || '',

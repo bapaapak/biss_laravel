@@ -10,6 +10,7 @@ class BudgetItem extends Model
 
     protected $fillable = [
         'plan_id',
+        'item_no',
         'io_id',
         'cc_id',
         'parent_item_id',

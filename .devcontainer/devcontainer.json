@@ -1,0 +1,33 @@
+{
+    "name": "BISS Laravel",
+    "image": "mcr.microsoft.com/devcontainers/php:8.3-bullseye",
+    "features": {
+        "ghcr.io/devcontainers/features/node:1": {
+            "version": "lts"
+        }
+    },
+    "forwardPorts": [8000, 3306],
+    "portsAttributes": {
+        "8000": {
+            "label": "Laravel",
+            "onAutoForward": "openBrowser",
+            "visibility": "public"
+        },
+        "3306": {
+            "label": "MySQL",
+            "onAutoForward": "silent"
+        }
+    },
+    "postCreateCommand": "bash setup.sh",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "bmewburn.vscode-intelephense-client",
+                "shufo.vscode-blade-formatter"
+            ],
+            "settings": {
+                "php.validate.executablePath": "/usr/local/bin/php"
+            }
+        }
+    }
+}

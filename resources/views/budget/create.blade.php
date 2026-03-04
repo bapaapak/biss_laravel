@@ -12,7 +12,7 @@
                     <p class="text-muted small mb-0">Format: A11 Budget Investment Plan</p>
                 </div>
             </div>
-            <a href="{{ route('budget.index') }}" class="btn btn-light btn-sm rounded-circle shadow-sm">
+            <a href="{{ route('budget.index') }}" class="btn btn-light btn-sm rounded-circle shadow-sm" onclick="return confirmLeave(event)">
                 <i class="fas fa-times"></i>
             </a>
         </div>
@@ -47,7 +47,7 @@
                     <div class="col-md-2">
                         <label class="form-label text-uppercase text-muted small fw-bold" style="font-size: 0.7rem;">Fiscal
                             Year</label>
-                        <select name="fiscal_year" class="form-select form-select-sm border-0 shadow-sm">
+                        <select name="fiscal_year" class="form-select form-select-sm" style="border: 1px solid #ced4da; background-color: #f8f9fa;">
                             @for($y = date('Y') + 1; $y >= date('Y') - 5; $y--)
                                 <option value="{{ $y }}" {{ date('Y') == $y ? 'selected' : '' }}>{{ $y }}</option>
                             @endfor
@@ -55,8 +55,8 @@
                     </div>
                     <div class="col-md-3">
                         <label class="form-label text-uppercase text-muted small fw-bold"
-                            style="font-size: 0.7rem;">Department</label>
-                        <select name="department" class="form-select form-select-sm border-0 shadow-sm" required>
+                            style="font-size: 0.7rem;">Department <span class="text-danger">*</span></label>
+                        <select name="department" class="form-select form-select-sm" style="border: 1px solid #ced4da; background-color: #f8f9fa;" required>
                             <option value="">-- Select Dept --</option>
                             @foreach($departments as $dept)
                                 <option value="{{ $dept->dept_code }}">{{ $dept->dept_code }} - {{ $dept->dept_name }}</option>
@@ -65,8 +65,8 @@
                     </div>
                     <div class="col-md-3">
                         <label class="form-label text-uppercase text-muted small fw-bold" style="font-size: 0.7rem;">Cost
-                            Center</label>
-                        <select name="cost_center" class="form-select form-select-sm border-0 shadow-sm" required>
+                            Center <span class="text-danger">*</span></label>
+                        <select name="cost_center" class="form-select form-select-sm" style="border: 1px solid #ced4da; background-color: #f8f9fa;" required>
                             <option value="">-- Select CC --</option>
                             @foreach($ccs as $cc)
                                 <option value="{{ $cc->cc_code }}">{{ $cc->cc_code }} - {{ $cc->cc_name }}</option>
@@ -79,8 +79,8 @@
                 <div class="row g-3 mb-4">
                     <div class="col-md-4">
                         <label class="form-label text-uppercase text-muted small fw-bold" style="font-size: 0.7rem;">Project
-                            / IO Reference</label>
-                        <select id="projectIoSelect" class="form-select border-0 shadow-sm" onchange="updateProjectIo(this)"
+                            / IO Reference <span class="text-danger">*</span></label>
+                        <select id="projectIoSelect" class="form-select" style="border: 1px solid #ced4da; background-color: #f8f9fa;" onchange="updateProjectIo(this)"
                             required>
                             <option value="">-- Select Project/IO --</option>
                             @foreach($ios as $io)
@@ -95,8 +95,8 @@
                     </div>
                     <div class="col-md-3">
                         <label class="form-label text-uppercase text-muted small fw-bold"
-                            style="font-size: 0.7rem;">Customer</label>
-                        <select name="customer" class="form-select border-0 shadow-sm" required>
+                            style="font-size: 0.7rem;">Customer <span class="text-danger">*</span></label>
+                        <select name="customer" class="form-select" style="border: 1px solid #ced4da; background-color: #f8f9fa;" required>
                             <option value="">-- Select Customer --</option>
                             @foreach($customers as $cust)
                                 <option value="{{ $cust->customer_name }}">{{ $cust->customer_code ?? '-' }} -
@@ -107,8 +107,8 @@
                     </div>
                     <div class="col-md-2">
                         <label class="form-label text-uppercase text-muted small fw-bold"
-                            style="font-size: 0.7rem;">Model</label>
-                        <input type="text" name="model" class="form-control border-0 shadow-sm" placeholder="Model Name"
+                            style="font-size: 0.7rem;">Model <span class="text-danger">*</span></label>
+                        <input type="text" name="model" class="form-control" style="border: 1px solid #ced4da; background-color: #f8f9fa;" placeholder="Model Name"
                             style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()">
                     </div>
                     <div class="col-md-3">
@@ -130,13 +130,31 @@
                 </div>
 
                 <!-- Add Item Form (Expanded) -->
-                <div class="border rounded-4 p-4 mb-4 bg-white shadow-sm"
+                <div class="border rounded-4 p-4 mb-4 bg-white shadow-sm item-form"
                     style="border-style: dashed !important; border-width: 2px !important;">
+                    <style>
+                        .item-form .form-control, .item-form .form-select {
+                            border: 1px solid #ced4da !important;
+                            background-color: #f8f9fa !important;
+                        }
+                        .item-form .form-control:focus, .item-form .form-select:focus {
+                            background-color: #fff !important;
+                            border-color: #86b7fe !important;
+                            box-shadow: 0 0 0 0.2rem rgba(13,110,253,.15) !important;
+                        }
+                        .item-form .input-group-text {
+                            border: 1px solid #ced4da !important;
+                        }
+                    </style>
                     <h6 class="fw-bold mb-3 text-primary d-flex align-items-center">
                         <i class="fas fa-plus-circle me-2"></i> Add Item Details
                     </h6>
 
                     <div class="row g-3 mb-3">
+                        <div class="col-md-1">
+                            <label class="form-label small fw-bold text-muted">No</label>
+                            <input type="number" id="item_no" class="form-control form-control-sm" placeholder="1" min="1">
+                        </div>
                         <div class="col-md-1">
                             <label class="form-label small fw-bold text-muted">Code</label>
                             <input type="text" id="item_code" class="form-control form-control-sm" placeholder="A/B"
@@ -147,16 +165,11 @@
                             <input type="text" id="item_category" class="form-control form-control-sm" list="category_list"
                                 style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()">
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <label class="form-label small fw-bold text-muted">Section / Process</label>
                             <select id="item_process" class="form-select form-select-sm">
-                                <option value="Preparation">Preparation</option>
-                                <option value="Casting">Casting</option>
-                                <option value="Machining">Machining</option>
-                                <option value="Painting">Painting</option>
-                                <option value="Assembly">Assembly</option>
-                                <option value="Quality">Quality</option>
-                                <option value="Others">Others</option>
+                                <option value="Preparation Process">Preparation Process</option>
+                                <option value="Final Assy Process">Final Assy Process</option>
                             </select>
                         </div>
                         <div class="col-md-6">
@@ -183,9 +196,14 @@
                             <label class="form-label small fw-bold text-muted">Qty</label>
                             <div class="input-group input-group-sm">
                                 <input type="number" id="item_qty" class="form-control" value="1" min="1">
-                                <span class="input-group-text">Unit</span>
+                                <select id="item_uom" class="form-select form-select-sm" style="min-width: 100px;">
+                                    <option value="Unit">Unit</option>
+                                    <option value="Set">Set</option>
+                                    <option value="Pcs">Pcs</option>
+                                    <option value="Titik">Titik</option>
+                                    <option value="Lot">Lot</option>
+                                </select>
                             </div>
-                            <input type="hidden" id="item_uom" value="Unit">
                         </div>
                         <div class="col-md-2">
                             <label class="form-label small fw-bold text-muted">Cost (Unit)</label>
@@ -305,7 +323,7 @@
 
         <!-- Action Footer -->
         <div class="d-flex justify-content-between align-items-center mt-5 pt-3 border-top">
-            <a href="{{ route('budget.index') }}" class="btn btn-light px-4 rounded-pill">
+            <a href="{{ route('budget.index') }}" class="btn btn-light px-4 rounded-pill" onclick="return confirmLeave(event)">
                 <i class="fas fa-arrow-left me-2"></i>Back
             </a>
             <div class="d-flex gap-2">
@@ -326,6 +344,67 @@
 
 @push('scripts')
     <script>
+        let formSubmitting = false;
+
+        function isFormDirty() {
+            // Check if any item has been added
+            if (items.length > 0) return true;
+            // Check if any form field has been filled
+            const fields = ['item_no', 'item_code', 'item_name', 'item_brand', 'item_app_process', 'item_condition_notes', 'item_schedule'];
+            for (const id of fields) {
+                const el = document.getElementById(id);
+                if (el && el.value.trim() !== '') return true;
+            }
+            // Check header fields
+            if (document.querySelector('[name="department"]')?.value) return true;
+            if (document.querySelector('[name="cost_center"]')?.value) return true;
+            if (document.getElementById('projectIoSelect')?.value) return true;
+            if (document.querySelector('[name="customer"]')?.value) return true;
+            if (document.querySelector('[name="model"]')?.value?.trim()) return true;
+            return false;
+        }
+
+        function confirmLeave(e) {
+            if (isFormDirty()) {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Data Belum Disimpan',
+                    text: 'Anda memiliki data yang belum disimpan. Yakin ingin keluar?',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, Keluar',
+                    cancelButtonText: 'Batal',
+                    confirmButtonColor: '#dc3545',
+                    cancelButtonColor: '#6c757d'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        formSubmitting = true;
+                        window.location.href = e.target.closest('a').href;
+                    }
+                });
+                return false;
+            }
+            return true;
+        }
+
+        // Browser back/refresh protection
+        window.addEventListener('beforeunload', function(e) {
+            if (!formSubmitting && isFormDirty()) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        });
+
+        // Mark as submitting when form is submitted
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('budgetForm');
+            if (form) {
+                form.addEventListener('submit', function() {
+                    formSubmitting = true;
+                });
+            }
+        });
+
         let items = [];
         let editingindex = -1;
 
@@ -465,6 +544,7 @@
             }
 
             const data = {
+                item_no: parseInt(document.getElementById('item_no').value) || 0,
                 code: document.getElementById('item_code').value,
                 category: document.getElementById('item_category').value,
                 process: document.getElementById('item_process').value,
@@ -510,6 +590,7 @@
             const item = items[index];
             editingindex = index;
 
+            document.getElementById('item_no').value = item.item_no || '';
             document.getElementById('item_code').value = item.code;
             document.getElementById('item_category').value = item.category;
             document.getElementById('item_process').value = item.process;
@@ -554,6 +635,7 @@
             }
 
             const data = {
+                item_no: parseInt(document.getElementById('item_no').value) || 0,
                 code: document.getElementById('item_code').value,
                 category: document.getElementById('item_category').value,
                 process: document.getElementById('item_process').value,
@@ -604,6 +686,7 @@
         }
 
         function resetForm() {
+            document.getElementById('item_no').value = '';
             document.getElementById('item_code').value = '';
             document.getElementById('item_name').value = '';
             document.getElementById('item_brand').value = '';
@@ -663,7 +746,7 @@
             });
 
             for (const key in grouped) {
-                let originalIndexCounter = 1;
+                let autoCounter = 1;
                 // Category/Process Header Row
                 const headerRow = document.createElement('tr');
                 headerRow.className = 'table-light fw-bold';
@@ -679,7 +762,7 @@
                     const tr = document.createElement('tr');
                     tr.className = `align-middle ${rowClass}`;
                     tr.innerHTML = `
-                                                                            <td class="text-center">${originalIndexCounter++}</td>
+                                                                            <td class="text-center">${item.item_no || autoCounter++}</td>
                                                                                 <td>${item.name}
                                                                             ${item.has_breakdown ? '<div class="small text-muted fst-italic mt-1">Include:</div>' : ''}
                                                                         </td>
@@ -708,6 +791,7 @@
 
                     // Hidden Inputs - placed in itemsContainer (inside form but outside table)
                     let html = `
+                                                                                <input type="hidden" name="items[${index}][item_no]" value="${item.item_no || ''}">
                                                                                 <input type="hidden" name="items[${index}][code]" value="${item.code || ''}">
                                                                                 <input type="hidden" name="items[${index}][category]" value="${item.category || ''}">
                                                                                 <input type="hidden" name="items[${index}][process]" value="${item.process || ''}">
@@ -797,6 +881,7 @@
                     // Create hidden inputs from JS items array
                     items.forEach((item, index) => {
                         const fields = {
+                            'item_no': item.item_no || '',
                             'code': item.code || '',
                             'category': item.category || '',
                             'process': item.process || '',
