@@ -34,27 +34,24 @@
 
             <div class="d-flex gap-2">
                 @if($plan->status == 'Draft')
-                    <form action="{{ route('budget.submit', $plan->id) }}" method="POST"
-                        onsubmit="return confirm('Submit this budget plan for approval?');">
+                    <form id="submitBudgetForm" action="{{ route('budget.submit', $plan->id) }}" method="POST">
                         @csrf
-                        <button type="submit" class="btn btn-primary btn-sm px-3 rounded-pill shadow-sm">
+                        <button type="button" class="btn btn-primary btn-sm px-3 rounded-pill shadow-sm" onclick="swalConfirmSubmit(this)">
                             <i class="fas fa-paper-plane me-1"></i> Submit
                         </button>
                     </form>
                 @endif
 
                 @if($plan->status == 'Submitted' && auth()->user()->canApproveBudget($plan->current_approver_role))
-                    <form action="{{ route('budget.approve', $plan->id) }}" method="POST" class="d-inline"
-                        onsubmit="return confirm('Are you sure you want to APPROVE this budget plan?');">
+                    <form id="approveBudgetForm" action="{{ route('budget.approve', $plan->id) }}" method="POST" class="d-inline">
                         @csrf
-                        <button type="submit" class="btn btn-success btn-sm px-3 rounded-pill shadow-sm">
+                        <button type="button" class="btn btn-success btn-sm px-3 rounded-pill shadow-sm" onclick="swalConfirmApprove(this)">
                             <i class="fas fa-check me-1"></i> Approve
                         </button>
                     </form>
-                    <form action="{{ route('budget.reject', $plan->id) }}" method="POST" class="d-inline"
-                        onsubmit="return confirm('Are you sure you want to REJECT this budget plan?');">
+                    <form id="rejectBudgetForm" action="{{ route('budget.reject', $plan->id) }}" method="POST" class="d-inline">
                         @csrf
-                        <button type="submit" class="btn btn-danger btn-sm px-3 rounded-pill shadow-sm">
+                        <button type="button" class="btn btn-danger btn-sm px-3 rounded-pill shadow-sm" onclick="swalConfirmReject(this)">
                             <i class="fas fa-times me-1"></i> Reject
                         </button>
                     </form>
@@ -739,6 +736,64 @@
 
 @push('scripts')
     <script>
+            // SweetAlert2 confirmation functions
+            function swalConfirmSubmit(btn) {
+                Swal.fire({
+                    title: 'Submit Budget Plan?',
+                    text: 'This budget plan will be submitted for approval.',
+                    icon: 'question',
+                    iconColor: '#0d6efd',
+                    showCancelButton: true,
+                    confirmButtonColor: '#0d6efd',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: '<i class="fas fa-paper-plane me-1"></i> Yes, Submit',
+                    cancelButtonText: 'Cancel',
+                    customClass: { popup: 'shadow-lg rounded-4' }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        btn.closest('form').submit();
+                    }
+                });
+            }
+
+            function swalConfirmApprove(btn) {
+                Swal.fire({
+                    title: 'Approve Budget Plan?',
+                    text: 'Are you sure you want to approve this budget plan?',
+                    icon: 'success',
+                    iconColor: '#198754',
+                    showCancelButton: true,
+                    confirmButtonColor: '#198754',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: '<i class="fas fa-check me-1"></i> Yes, Approve',
+                    cancelButtonText: 'Cancel',
+                    customClass: { popup: 'shadow-lg rounded-4' }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        btn.closest('form').submit();
+                    }
+                });
+            }
+
+            function swalConfirmReject(btn) {
+                Swal.fire({
+                    title: 'Reject Budget Plan?',
+                    html: 'Are you sure you want to <strong class="text-danger">reject</strong> this budget plan?',
+                    icon: 'warning',
+                    iconColor: '#dc3545',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc3545',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: '<i class="fas fa-times me-1"></i> Yes, Reject',
+                    cancelButtonText: 'Cancel',
+                    customClass: { popup: 'shadow-lg rounded-4' }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        btn.closest('form').submit();
+                    }
+                });
+            }
+
             let formSubmitting = false;
             let initialItemsJson = '';
 
@@ -804,6 +859,7 @@
                     brand_spec: "{{ addslashes($item->brand_spec ?? '') }}",
                     app_process: "{{ addslashes($item->application_process ?? '') }}",
                     qty: {{ $item->qty }},
+                    uom: "{{ addslashes($item->uom ?? 'Unit') }}",
                     price: {{ $item->estimated_price ?? 0 }},
                     pr_used: {{ $prUsagePerItem[$item->id] ?? 0 }},
                     condition_status: "{{ addslashes($item->condition_status ?? 'Ready') }}",
@@ -961,6 +1017,7 @@
                     brand_spec: document.getElementById('item_brand').value,
                     app_process: document.getElementById('item_app_process').value,
                     qty: parseFloat(document.getElementById('item_qty').value),
+                    uom: document.getElementById('item_uom').value,
                     price: parseFloat(document.getElementById('item_price').value) || parseFloat(priceDisplay) || 0,
                     condition_status: document.getElementById('item_condition_status').value,
                     condition_notes: document.getElementById('item_condition_notes').value,
@@ -1012,6 +1069,7 @@
                 document.getElementById('item_brand').value = item.brand_spec;
                 document.getElementById('item_app_process').value = item.app_process;
                 document.getElementById('item_qty').value = item.qty;
+                document.getElementById('item_uom').value = item.uom || 'Unit';
                 document.getElementById('item_price').value = item.price;
                 document.getElementById('item_price_display').value = formatWithDots(item.price);
                 document.getElementById('item_condition_status').value = item.condition_status;
@@ -1051,6 +1109,7 @@
                     brand_spec: document.getElementById('item_brand').value,
                     app_process: document.getElementById('item_app_process').value,
                     qty: parseFloat(document.getElementById('item_qty').value),
+                    uom: document.getElementById('item_uom').value,
                     price: parseFloat(document.getElementById('item_price').value) || parseFloat(priceDisplay) || 0,
                     condition_status: document.getElementById('item_condition_status').value,
                     condition_notes: document.getElementById('item_condition_notes').value,
@@ -1098,6 +1157,7 @@
                 document.getElementById('item_brand').value = '';
                 document.getElementById('item_app_process').value = '';
                 document.getElementById('item_qty').value = '1';
+                document.getElementById('item_uom').value = 'Unit';
                 document.getElementById('item_price').value = '0';
                 document.getElementById('item_price_display').value = '0';
                 document.getElementById('item_condition_status').value = 'Ready';
@@ -1110,10 +1170,22 @@
             }
 
             function removeItem(index) {
-                if (confirm('Are you sure you want to remove this item?')) {
-                    items.splice(index, 1);
-                    renderTable();
-                }
+                Swal.fire({
+                    title: 'Remove Item?',
+                    text: 'This item will be removed from the list.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc3545',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: '<i class="fas fa-trash-alt me-1"></i> Yes, Remove',
+                    cancelButtonText: 'Cancel',
+                    customClass: { popup: 'shadow-lg rounded-4' }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        items.splice(index, 1);
+                        renderTable();
+                    }
+                });
             }
 
             function renderTable() {
@@ -1211,6 +1283,7 @@
                                     <input type="hidden" name="items[${index}][brand_spec]" value="${item.brand_spec}">
                                     <input type="hidden" name="items[${index}][application_process]" value="${item.app_process}">
                                     <input type="hidden" name="items[${index}][qty]" value="${item.qty}">
+                                    <input type="hidden" name="items[${index}][uom]" value="${item.uom || 'Unit'}">
                                     <input type="hidden" name="items[${index}][price]" value="${item.price}">
                                     <input type="hidden" name="items[${index}][condition_status]" value="${item.condition_status}">
                                     <input type="hidden" name="items[${index}][condition_notes]" value="${item.condition_notes}">
@@ -1237,7 +1310,7 @@
                                             <td></td>
                                             <td class="ps-4"><i class="fas fa-level-up-alt fa-rotate-90 me-2"></i> ${bd.name}</td>
                                             <td>${bd.brand || '-'}</td>
-                                            <td class="text-center">${bd.qty} Unit</td>
+                                            <td class="text-center">${bd.qty} ${item.uom || 'Unit'}</td>
                                             <td>${bd.app_process || '-'}</td>
                                             <td><span class="badge bg-secondary">Detail</span></td>
                                             <td class="text-end">IDR ${formatWithDots(bd.price * bd.qty)}</td>

@@ -552,6 +552,7 @@
                 brand_spec: document.getElementById('item_brand').value,
                 app_process: document.getElementById('item_app_process').value,
                 qty: parseFloat(document.getElementById('item_qty').value),
+                uom: document.getElementById('item_uom').value,
                 price: parseFloat(document.getElementById('item_price').value) || parseFloat(priceDisplay) || 0,
                 condition_status: document.getElementById('item_condition_status').value,
                 condition_notes: document.getElementById('item_condition_notes').value,
@@ -598,6 +599,7 @@
             document.getElementById('item_brand').value = item.brand_spec;
             document.getElementById('item_app_process').value = item.app_process;
             document.getElementById('item_qty').value = item.qty;
+            document.getElementById('item_uom').value = item.uom || 'Unit';
             document.getElementById('item_price').value = item.price;
             document.getElementById('item_price_display').value = formatWithDots(item.price);
             document.getElementById('item_condition_status').value = item.condition_status;
@@ -643,6 +645,7 @@
                 brand_spec: document.getElementById('item_brand').value,
                 app_process: document.getElementById('item_app_process').value,
                 qty: parseFloat(document.getElementById('item_qty').value),
+                uom: document.getElementById('item_uom').value,
                 price: parseFloat(document.getElementById('item_price').value) || parseFloat(priceDisplay) || 0,
                 condition_status: document.getElementById('item_condition_status').value,
                 condition_notes: document.getElementById('item_condition_notes').value,
@@ -692,6 +695,7 @@
             document.getElementById('item_brand').value = '';
             document.getElementById('item_app_process').value = '';
             document.getElementById('item_qty').value = '1';
+            document.getElementById('item_uom').value = 'Unit';
             document.getElementById('item_price').value = '0';
             document.getElementById('item_price_display').value = '0';
             document.getElementById('item_condition_status').value = 'Ready';
@@ -799,6 +803,7 @@
                                                                         <input type="hidden" name="items[${index}][brand_spec]" value="${item.brand_spec || ''}">
                                                                                 <input type="hidden" name="items[${index}][application_process]" value="${item.app_process || ''}">
                                                                                 <input type="hidden" name="items[${index}][qty]" value="${item.qty}">
+                                                                                <input type="hidden" name="items[${index}][uom]" value="${item.uom || 'Unit'}">
                                                                                 <input type="hidden" name="items[${index}][price]" value="${item.price}">
                                                                                 <input type="hidden" name="items[${index}][condition_status]" value="${item.condition_status}">
                                                                                 <input type="hidden" name="items[${index}][condition_notes]" value="${item.condition_notes || ''}">
@@ -830,7 +835,7 @@
                                                                                         <td></td>
                                                                                         <td class="ps-4">- ${sub.name}</td>
                                                                                         <td>${sub.brand || '-'}</td>
-                                                                                        <td class="text-center">${sub.qty} Unit</td>
+                                                                                        <td class="text-center">${sub.qty} ${item.uom || 'Unit'}</td>
                                                                                         <td>${sub.app_process || '-'}</td>
                                                                                         <td><span class="badge bg-secondary">Detail</span></td>
                                                                                         <td class="text-end">IDR ${formatWithDots(sub.qty * sub.price)}</td>

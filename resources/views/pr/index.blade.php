@@ -431,6 +431,16 @@
 
 @push('scripts')
     <script>
+        // Fix dropdown inside table-responsive causing scrollbar
+        document.querySelectorAll('.table-responsive').forEach(function(el) {
+            el.addEventListener('show.bs.dropdown', function() {
+                this.style.overflow = 'visible';
+            });
+            el.addEventListener('hide.bs.dropdown', function() {
+                this.style.overflow = 'auto';
+            });
+        });
+
         document.getElementById('searchPR').addEventListener('keydown', function (e) {
             if (e.key === 'Enter') {
                 let filter = this.value;
