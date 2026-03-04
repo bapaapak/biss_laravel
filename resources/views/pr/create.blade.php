@@ -277,7 +277,7 @@
                                     <th>UoM</th>
                                     <th>Cost/Unit</th>
                                     <th>Total</th>
-                                    <th></th>
+                                    <th class="text-center" style="min-width: 60px;">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -467,7 +467,7 @@
                                                     </td>
                                                     <td class="fw-bold text-dark small">${formatMoney(t)}</td>
                                                     <td class="text-center">
-                                                        <button type="button" class="btn btn-link text-danger p-0" onclick="removeRow(${itemCount})" title="Remove"><i class="fas fa-trash-alt"></i></button>
+                                                        <button type="button" class="btn btn-link text-danger p-0 btn-remove-row" data-row-id="${itemCount}" title="Remove"><i class="fas fa-trash-alt"></i></button>
                                                     </td>
                                                 `;
 
@@ -484,13 +484,24 @@
         }
 
         function removeRow(id) {
-            document.getElementById(`row-${id}`).remove();
+            const row = document.getElementById(`row-${id}`);
+            if (row) row.remove();
             // Check if only emptyRow is left or if table is empty
             const rows = tableBody.querySelectorAll('tr:not(#emptyRow)');
             if (rows.length === 0) {
                 if (emptyRow) emptyRow.style.display = 'table-row';
             }
         }
+
+        // Event delegation for delete buttons
+        tableBody.addEventListener('click', function(e) {
+            const btn = e.target.closest('.btn-remove-row');
+            if (btn) {
+                e.preventDefault();
+                const rowId = btn.getAttribute('data-row-id');
+                removeRow(rowId);
+            }
+        });
 
         function formatMoney(amount) {
             return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);

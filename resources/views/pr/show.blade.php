@@ -613,20 +613,30 @@
     }
 
     function deleteItem(btn, itemId) {
-        if(confirm('Hapus item ini? Simpan perubahan untuk memproses.')) {
-            let row = btn.closest('tr');
-            if(itemId) {
-                // Add to hidden deleted list
-                let container = document.getElementById('deleted-items-container');
-                let input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = 'deleted_items[]';
-                input.value = itemId;
-                container.appendChild(input);
+        Swal.fire({
+            title: 'Hapus Item?',
+            text: 'Item akan dihapus setelah menyimpan perubahan.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Ya, Hapus',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                let row = btn.closest('tr');
+                if(itemId) {
+                    let container = document.getElementById('deleted-items-container');
+                    let input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'deleted_items[]';
+                    input.value = itemId;
+                    container.appendChild(input);
+                }
+                row.remove();
+                calculateGrandTotal();
             }
-            row.remove();
-            calculateGrandTotal();
-        }
+        });
     }
 
     function addItem() {
@@ -726,8 +736,6 @@
         cost.value = '';
         mMaster.value = '';
         mBudget.value = '';
-    }    
-        // Hide empty row msg if exists? We don't have one here but logic handles it.
     }
 
     // A11 Link Listener for new items
