@@ -97,7 +97,7 @@
 
     <div class="card border-0 shadow-sm d-none d-md-block">
         <div class="card-body p-0">
-            <div class="table-responsive">
+            <div class="table-responsive" style="overflow: visible;">
                 <table class="table table-hover mb-0" id="tableBudget" style="font-size: 0.85rem;">
                     <thead class="bg-light">
                         <tr>
