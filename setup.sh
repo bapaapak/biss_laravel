@@ -50,33 +50,9 @@ if ! command -v mysqld &>/dev/null; then
     fail "Failed to install MySQL"
 fi
 
-# ---------- 3. Start MySQL ----------
-step "Starting MySQL..."
+# Check if MySQL is running
 if ! mysqladmin ping -h 127.0.0.1 --silent 2>/dev/null; then
-    sudo mkdir -p /var/run/mysqld
-    sudo chown mysql:mysql /var/run/mysqld
-    
-    # Stop any existing instance
-    sudo mysqladmin shutdown 2>/dev/null || true
-    sleep 1
-    
-    # Start MySQL with networking enabled
-    sudo mysqld --user=mysql --bind-address=127.0.0.1 --port=3306 &
-    
-    # Wait for MySQL to be ready (max 15 seconds)
-    echo -n "  Waiting for MySQL"
-    for i in $(seq 1 15); do
-        if mysqladmin ping -h 127.0.0.1 --silent 2>/dev/null; then
-            echo " ready!"
-            break
-        fi
-        echo -n "."
-        sleep 1
-    done
-    
-    if ! mysqladmin ping -h 127.0.0.1 --silent 2>/dev/null; then
-        fail "MySQL failed to start"
-    fi
+    fail "MySQL failed to start"
 fi
 echo "  MySQL running on port 3306"
 
@@ -183,7 +159,7 @@ fi
 step "Setting up storage directories..."
 mkdir -p storage/framework/{sessions,views,cache/data}
 mkdir -p storage/logs
-chmod -R 775 storage bootstrap/cache
+chmod -R 775 storage bootstrap/cache 2>/dev/null || true
 
 # ---------- 8. NPM install & build ----------
 step "Installing frontend dependencies..."
