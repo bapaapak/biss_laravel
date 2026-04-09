@@ -41,6 +41,11 @@ RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist
 # Copy application code
 COPY . .
 
+# Create temporary .env for build-time artisan commands (real .env comes from Dokploy at runtime)
+RUN cp .env.example .env.build && \
+    sed -i 's/APP_NAME=.*/APP_NAME=BISS/' .env.example && \
+    cp .env.example .env
+
 # Complete composer install (autoloader, scripts)
 RUN composer dump-autoload --optimize --no-dev
 
