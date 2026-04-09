@@ -1,5 +1,4 @@
 #!/bin/bash
-set -e
 
 # Ensure storage directories exist
 mkdir -p storage/framework/{views,sessions,cache} \
@@ -10,21 +9,28 @@ mkdir -p storage/framework/{views,sessions,cache} \
 chmod -R 775 storage bootstrap/cache
 chown -R www-data:www-data storage bootstrap/cache
 
+# Create .env from environment variables if not exists
+if [ ! -f ".env" ]; then
+    env | grep -E '^(APP_|DB_|CACHE_|SESSION_|MAIL_|LOG_|QUEUE_|BROADCAST_|FILESYSTEM_|REDIS_)' | sort > .env
+fi
+
 # Discover packages (skipped during build)
-php artisan package:discover --ansi 2>/dev/null || true
+php artisan package:discover --ansi || true
 
 # Generate app key if missing
-if [ -z "$APP_KEY" ] || [ "$APP_KEY" = "" ]; then
-    php artisan key:generate --force
+if [ -z "$APP_KEY" ]; then
+    php artisan key:generate --force || true
 fi
 
 # Run migrations
-php artisan migrate --force --no-interaction 2>/dev/null || true
+php artisan migrate --force --no-interaction || true
 
 # Cache config, routes, views for production
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
+php artisan config:cache || true
+php artisan route:cache || true
+php artisan view:cache || true
+
+echo "Starting nginx + php-fpm..."
 
 # Start services
 exec /usr/bin/supervisord -c /etc/supervisord.conf

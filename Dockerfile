@@ -55,6 +55,10 @@ RUN mkdir -p storage/framework/{views,sessions,cache} \
     && chmod -R 775 storage bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache
 
+# Configure php-fpm to listen on TCP port 9000
+RUN sed -i 's|listen = /run/php-fpm/www.sock|listen = 127.0.0.1:9000|g' /usr/local/etc/php-fpm.d/www.conf 2>/dev/null || true && \
+    sed -i 's|listen = 9000|listen = 127.0.0.1:9000|g' /usr/local/etc/php-fpm.d/zz-docker.conf 2>/dev/null || true
+
 # Configure nginx
 COPY docker/nginx.conf /etc/nginx/nginx.conf
 
