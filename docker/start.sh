@@ -10,8 +10,11 @@ mkdir -p storage/framework/{views,sessions,cache} \
 chmod -R 775 storage bootstrap/cache
 chown -R www-data:www-data storage bootstrap/cache
 
+# Discover packages (skipped during build)
+php artisan package:discover --ansi 2>/dev/null || true
+
 # Generate app key if missing
-if [ -z "$APP_KEY" ]; then
+if [ -z "$APP_KEY" ] || [ "$APP_KEY" = "" ]; then
     php artisan key:generate --force
 fi
 

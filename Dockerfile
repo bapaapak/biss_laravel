@@ -41,13 +41,8 @@ RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist
 # Copy application code
 COPY . .
 
-# Create temporary .env for build-time artisan commands (real .env comes from Dokploy at runtime)
-RUN cp .env.example .env.build && \
-    sed -i 's/APP_NAME=.*/APP_NAME=BISS/' .env.example && \
-    cp .env.example .env
-
-# Complete composer install (autoloader, scripts)
-RUN composer dump-autoload --optimize --no-dev
+# Complete composer autoload (skip artisan scripts - they run at startup)
+RUN composer dump-autoload --optimize --no-dev --no-scripts
 
 # Install Node dependencies and build assets
 RUN npm ci && npm run build && rm -rf node_modules
