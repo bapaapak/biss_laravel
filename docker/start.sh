@@ -11,7 +11,11 @@ chown -R www-data:www-data storage bootstrap/cache
 
 # Create .env from environment variables if not exists
 if [ ! -f ".env" ]; then
-    env | grep -E '^(APP_|DB_|CACHE_|SESSION_|MAIL_|LOG_|QUEUE_|BROADCAST_|FILESYSTEM_|REDIS_)' | sort > .env
+    printenv | grep -E '^(APP_|DB_|CACHE_|SESSION_|MAIL_|LOG_|QUEUE_|BROADCAST_|FILESYSTEM_|REDIS_)' | while IFS='=' read -r key value; do
+        echo "${key}=\"${value}\""
+    done | sort > .env
+    echo "Generated .env from environment variables"
+    cat .env
 fi
 
 # Discover packages (skipped during build)

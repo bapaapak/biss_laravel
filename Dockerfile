@@ -59,6 +59,11 @@ RUN mkdir -p storage/framework/{views,sessions,cache} \
 RUN sed -i 's|listen = /run/php-fpm/www.sock|listen = 127.0.0.1:9000|g' /usr/local/etc/php-fpm.d/www.conf 2>/dev/null || true && \
     sed -i 's|listen = 9000|listen = 127.0.0.1:9000|g' /usr/local/etc/php-fpm.d/zz-docker.conf 2>/dev/null || true
 
+# PHP config for production (show errors temporarily for debugging)
+RUN echo "display_errors=On" >> /usr/local/etc/php/conf.d/app.ini && \
+    echo "error_reporting=E_ALL" >> /usr/local/etc/php/conf.d/app.ini && \
+    echo "log_errors=On" >> /usr/local/etc/php/conf.d/app.ini
+
 # Configure nginx
 COPY docker/nginx.conf /etc/nginx/nginx.conf
 
