@@ -2,12 +2,21 @@
 /node_modules
 /public/storage
 /public/build
+/bootstrap/cache/*.php
 /storage/*.key
 /storage/pail
+/storage/logs/*
+!/storage/logs/.gitkeep
+/storage/app/public/*
+!/storage/app/public/.gitkeep
 /storage/framework/cache/data/*
+!/storage/framework/cache/data/.gitkeep
 /storage/framework/sessions/*
+!/storage/framework/sessions/.gitkeep
 /storage/framework/testing/*
+!/storage/framework/testing/.gitkeep
 /storage/framework/views/*
+!/storage/framework/views/.gitkeep
 
 .env
 .env.backup
