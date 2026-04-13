@@ -6,9 +6,6 @@ mkdir -p storage/framework/{views,sessions,cache} \
          storage/app/public \
          bootstrap/cache
 
-chmod -R 775 storage bootstrap/cache
-chown -R www-data:www-data storage bootstrap/cache
-
 # Create .env from environment variables if not exists
 if [ ! -f ".env" ]; then
     printenv | grep -E '^(APP_|DB_|CACHE_|SESSION_|MAIL_|LOG_|QUEUE_|BROADCAST_|FILESYSTEM_|REDIS_)' | while IFS='=' read -r key value; do
@@ -33,6 +30,10 @@ php artisan migrate --force --no-interaction || true
 php artisan config:cache || true
 php artisan route:cache || true
 php artisan view:cache || true
+
+# Fix permissions AFTER artisan commands (which create files as root)
+chmod -R 775 storage bootstrap/cache
+chown -R www-data:www-data storage bootstrap/cache
 
 echo "Starting nginx + php-fpm..."
 
