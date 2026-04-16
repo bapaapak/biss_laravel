@@ -40,21 +40,79 @@ if [ "${AUTO_IMPORT_SQL_DUMP:-false}" = "true" ] && [ -n "${SQL_DUMP_FILE}" ] &&
     echo "AUTO_IMPORT_SQL_DUMP enabled. Checking current DB contents..."
     echo "Using SQL dump file: ${SQL_DUMP_FILE}"
 
-    MYSQL_BASE_CMD=(mysql --ssl=0 -h "${DB_HOST}" -P "${DB_PORT:-3306}" -u"${DB_USERNAME}" -p"${DB_PASSWORD}")
-
-    PROJECTS_COUNT=$("${MYSQL_BASE_CMD[@]}" -D "${DB_DATABASE}" -Nse "SELECT COUNT(*) FROM projects;" 2>/dev/null || echo "__ERR__")
+    PROJECTS_COUNT=$(php -r '
+        $h = getenv("DB_HOST");
+        $p = getenv("DB_PORT") ?: "3306";
+        $d = getenv("DB_DATABASE");
+        $u = getenv("DB_USERNAME");
+        $pw = getenv("DB_PASSWORD");
+        try {
+            $pdo = new PDO("mysql:host={$h};port={$p};dbname={$d};charset=utf8mb4", $u, $pw, [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::MYSQL_ATTR_MULTI_STATEMENTS => true,
+            ]);
+            $count = $pdo->query("SELECT COUNT(*) FROM projects")->fetchColumn();
+            echo $count === false ? "0" : $count;
+        } catch (Throwable $e) {
+            fwrite(STDERR, $e->getMessage());
+            exit(1);
+        }
+    ' 2>/dev/null || echo "__ERR__")
 
     if [ "${PROJECTS_COUNT}" = "__ERR__" ] || [ "${PROJECTS_COUNT}" = "0" ]; then
         echo "Importing SQL dump into ${DB_DATABASE}..."
-        "${MYSQL_BASE_CMD[@]}" --force "${DB_DATABASE}" < "${SQL_DUMP_FILE}" || true
-        echo "SQL import step finished."
+        if php -r '
+            $h = getenv("DB_HOST");
+            $p = getenv("DB_PORT") ?: "3306";
+            $d = getenv("DB_DATABASE");
+            $u = getenv("DB_USERNAME");
+            $pw = getenv("DB_PASSWORD");
+            $file = getenv("SQL_DUMP_FILE");
 
-        PROJECTS_COUNT_AFTER=$("${MYSQL_BASE_CMD[@]}" -D "${DB_DATABASE}" -Nse "SELECT COUNT(*) FROM projects;" 2>/dev/null || echo "__ERR__")
-        USERS_COUNT_AFTER=$("${MYSQL_BASE_CMD[@]}" -D "${DB_DATABASE}" -Nse "SELECT COUNT(*) FROM users;" 2>/dev/null || echo "__ERR__")
-        BUDGET_PLANS_COUNT_AFTER=$("${MYSQL_BASE_CMD[@]}" -D "${DB_DATABASE}" -Nse "SELECT COUNT(*) FROM budget_plans;" 2>/dev/null || echo "__ERR__")
-        PR_COUNT_AFTER=$("${MYSQL_BASE_CMD[@]}" -D "${DB_DATABASE}" -Nse "SELECT COUNT(*) FROM purchase_requests;" 2>/dev/null || echo "__ERR__")
+            try {
+                $pdo = new PDO("mysql:host={$h};port={$p};dbname={$d};charset=utf8mb4", $u, $pw, [
+                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                    PDO::MYSQL_ATTR_MULTI_STATEMENTS => true,
+                ]);
 
-        echo "Post-import row counts: projects=${PROJECTS_COUNT_AFTER}, users=${USERS_COUNT_AFTER}, budget_plans=${BUDGET_PLANS_COUNT_AFTER}, purchase_requests=${PR_COUNT_AFTER}"
+                $sql = @file_get_contents($file);
+                if ($sql === false) {
+                    throw new RuntimeException("Cannot read SQL dump file: {$file}");
+                }
+
+                $pdo->exec($sql);
+                echo "SQL import step finished.";
+            } catch (Throwable $e) {
+                fwrite(STDERR, $e->getMessage());
+                exit(1);
+            }
+        '; then
+            echo "SQL import step finished."
+        else
+            echo "SQL import failed."
+        fi
+
+        COUNTS_AFTER=$(php -r '
+            $h = getenv("DB_HOST");
+            $p = getenv("DB_PORT") ?: "3306";
+            $d = getenv("DB_DATABASE");
+            $u = getenv("DB_USERNAME");
+            $pw = getenv("DB_PASSWORD");
+            try {
+                $pdo = new PDO("mysql:host={$h};port={$p};dbname={$d};charset=utf8mb4", $u, $pw, [
+                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                ]);
+                $projects = $pdo->query("SELECT COUNT(*) FROM projects")->fetchColumn();
+                $users = $pdo->query("SELECT COUNT(*) FROM users")->fetchColumn();
+                $budgetPlans = $pdo->query("SELECT COUNT(*) FROM budget_plans")->fetchColumn();
+                $prs = $pdo->query("SELECT COUNT(*) FROM purchase_requests")->fetchColumn();
+                echo "projects={$projects}, users={$users}, budget_plans={$budgetPlans}, purchase_requests={$prs}";
+            } catch (Throwable $e) {
+                echo "projects=__ERR__, users=__ERR__, budget_plans=__ERR__, purchase_requests=__ERR__";
+            }
+        ' 2>/dev/null)
+
+        echo "Post-import row counts: ${COUNTS_AFTER}"
     else
         echo "Skipping SQL import because projects table already has data (${PROJECTS_COUNT} rows)."
     fi
