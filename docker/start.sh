@@ -40,11 +40,13 @@ if [ "${AUTO_IMPORT_SQL_DUMP:-false}" = "true" ] && [ -n "${SQL_DUMP_FILE}" ] &&
     echo "AUTO_IMPORT_SQL_DUMP enabled. Checking current DB contents..."
     echo "Using SQL dump file: ${SQL_DUMP_FILE}"
 
-    PROJECTS_COUNT=$(mysql -h "${DB_HOST}" -P "${DB_PORT:-3306}" -u"${DB_USERNAME}" -p"${DB_PASSWORD}" -D "${DB_DATABASE}" -Nse "SELECT COUNT(*) FROM projects;" 2>/dev/null || echo "__ERR__")
+    MYSQL_BASE_CMD=(mysql --ssl=0 -h "${DB_HOST}" -P "${DB_PORT:-3306}" -u"${DB_USERNAME}" -p"${DB_PASSWORD}")
+
+    PROJECTS_COUNT=$("${MYSQL_BASE_CMD[@]}" -D "${DB_DATABASE}" -Nse "SELECT COUNT(*) FROM projects;" 2>/dev/null || echo "__ERR__")
 
     if [ "${PROJECTS_COUNT}" = "__ERR__" ] || [ "${PROJECTS_COUNT}" = "0" ]; then
         echo "Importing SQL dump into ${DB_DATABASE}..."
-        mysql --force -h "${DB_HOST}" -P "${DB_PORT:-3306}" -u"${DB_USERNAME}" -p"${DB_PASSWORD}" "${DB_DATABASE}" < "${SQL_DUMP_FILE}" || true
+        "${MYSQL_BASE_CMD[@]}" --force "${DB_DATABASE}" < "${SQL_DUMP_FILE}" || true
         echo "SQL import step finished."
     else
         echo "Skipping SQL import because projects table already has data (${PROJECTS_COUNT} rows)."
