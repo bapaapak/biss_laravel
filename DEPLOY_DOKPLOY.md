@@ -48,11 +48,13 @@ Isi env di panel Dokploy minimal seperti ini:
 - `MAIL_FROM_NAME=BISS System`
 - `RUN_MIGRATIONS=true`
 - `AUTO_IMPORT_SQL_DUMP=true` (hanya untuk deploy awal ketika database masih kosong)
+- `SQL_DUMP_FILE=ssotoght_db_biss (1) (2).sql` (opsional, untuk memilih dump secara eksplisit)
 
 Catatan:
 - Container akan otomatis menjalankan `php artisan migrate` saat startup jika `RUN_MIGRATIONS=true`.
 - Untuk deploy rolling yang lebih aman di jam sibuk, bisa set `RUN_MIGRATIONS=false`, lalu migrate manual via terminal Dokploy.
 - Jika `AUTO_IMPORT_SQL_DUMP=true`, container akan mencoba import file `ssotoght_db_biss (1).sql` saat startup ketika tabel `projects` masih kosong.
+- Jika `SQL_DUMP_FILE` diisi, startup akan memakai file itu. Jika tidak diisi, startup akan memprioritaskan `ssotoght_db_biss (1) (2).sql`, lalu fallback ke `ssotoght_db_biss (1).sql`.
 - Setelah data sudah terisi, ubah `AUTO_IMPORT_SQL_DUMP=false` agar tidak mencoba import ulang di startup berikutnya.
 
 ## 4) Domain dan SSL

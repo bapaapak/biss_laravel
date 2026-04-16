@@ -19,6 +19,7 @@ SESSION_DRIVER=file
 SESSION_LIFETIME=120
 QUEUE_CONNECTION=sync
 AUTO_IMPORT_SQL_DUMP=true
+SQL_DUMP_FILE="ssotoght_db_biss (1) (2).sql"
 
 MAIL_MAILER=smtp
 MAIL_HOST=mail.tubagus.biz.id

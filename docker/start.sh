@@ -26,14 +26,25 @@ fi
 
 # Optional: import bundled SQL dump when target DB is empty.
 # Enable with AUTO_IMPORT_SQL_DUMP=true on first deployment only.
-if [ "${AUTO_IMPORT_SQL_DUMP:-false}" = "true" ] && [ -f "ssotoght_db_biss (1).sql" ]; then
+# You can force the file name via SQL_DUMP_FILE.
+SQL_DUMP_FILE="${SQL_DUMP_FILE:-}"
+if [ -z "${SQL_DUMP_FILE}" ]; then
+    if [ -f "ssotoght_db_biss (1) (2).sql" ]; then
+        SQL_DUMP_FILE="ssotoght_db_biss (1) (2).sql"
+    elif [ -f "ssotoght_db_biss (1).sql" ]; then
+        SQL_DUMP_FILE="ssotoght_db_biss (1).sql"
+    fi
+fi
+
+if [ "${AUTO_IMPORT_SQL_DUMP:-false}" = "true" ] && [ -n "${SQL_DUMP_FILE}" ] && [ -f "${SQL_DUMP_FILE}" ]; then
     echo "AUTO_IMPORT_SQL_DUMP enabled. Checking current DB contents..."
+    echo "Using SQL dump file: ${SQL_DUMP_FILE}"
 
     PROJECTS_COUNT=$(mysql -h "${DB_HOST}" -P "${DB_PORT:-3306}" -u"${DB_USERNAME}" -p"${DB_PASSWORD}" -D "${DB_DATABASE}" -Nse "SELECT COUNT(*) FROM projects;" 2>/dev/null || echo "__ERR__")
 
     if [ "${PROJECTS_COUNT}" = "__ERR__" ] || [ "${PROJECTS_COUNT}" = "0" ]; then
         echo "Importing SQL dump into ${DB_DATABASE}..."
-        mysql --force -h "${DB_HOST}" -P "${DB_PORT:-3306}" -u"${DB_USERNAME}" -p"${DB_PASSWORD}" "${DB_DATABASE}" < "ssotoght_db_biss (1).sql" || true
+        mysql --force -h "${DB_HOST}" -P "${DB_PORT:-3306}" -u"${DB_USERNAME}" -p"${DB_PASSWORD}" "${DB_DATABASE}" < "${SQL_DUMP_FILE}" || true
         echo "SQL import step finished."
     else
         echo "Skipping SQL import because projects table already has data (${PROJECTS_COUNT} rows)."
