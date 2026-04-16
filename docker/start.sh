@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 # Ensure storage directories exist
 mkdir -p storage/framework/{views,sessions,cache} \
          storage/logs \
@@ -12,7 +14,6 @@ if [ ! -f ".env" ]; then
         echo "${key}=\"${value}\""
     done | sort > .env
     echo "Generated .env from environment variables"
-    cat .env
 fi
 
 # Discover packages (skipped during build)
@@ -23,8 +24,13 @@ if [ -z "$APP_KEY" ]; then
     php artisan key:generate --force || true
 fi
 
-# Run migrations
-php artisan migrate --force --no-interaction || true
+# Ensure public storage symlink exists
+php artisan storage:link || true
+
+# Run migrations when explicitly enabled
+if [ "${RUN_MIGRATIONS:-true}" = "true" ]; then
+    php artisan migrate --force --no-interaction || true
+fi
 
 # Cache config, routes, views for production
 php artisan config:cache || true

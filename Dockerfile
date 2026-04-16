@@ -59,10 +59,14 @@ RUN mkdir -p storage/framework/{views,sessions,cache} \
 RUN sed -i 's|listen = /run/php-fpm/www.sock|listen = 127.0.0.1:9000|g' /usr/local/etc/php-fpm.d/www.conf 2>/dev/null || true && \
     sed -i 's|listen = 9000|listen = 127.0.0.1:9000|g' /usr/local/etc/php-fpm.d/zz-docker.conf 2>/dev/null || true
 
-# PHP config for production (show errors temporarily for debugging)
-RUN echo "display_errors=On" >> /usr/local/etc/php/conf.d/app.ini && \
-    echo "error_reporting=E_ALL" >> /usr/local/etc/php/conf.d/app.ini && \
-    echo "log_errors=On" >> /usr/local/etc/php/conf.d/app.ini
+# PHP config for production
+RUN echo "display_errors=Off" >> /usr/local/etc/php/conf.d/app.ini && \
+    echo "log_errors=On" >> /usr/local/etc/php/conf.d/app.ini && \
+    echo "error_reporting=E_ALL & ~E_DEPRECATED & ~E_STRICT" >> /usr/local/etc/php/conf.d/app.ini && \
+    echo "opcache.enable=1" >> /usr/local/etc/php/conf.d/app.ini && \
+    echo "opcache.validate_timestamps=0" >> /usr/local/etc/php/conf.d/app.ini && \
+    echo "opcache.memory_consumption=192" >> /usr/local/etc/php/conf.d/app.ini && \
+    echo "opcache.max_accelerated_files=20000" >> /usr/local/etc/php/conf.d/app.ini
 
 # Configure nginx
 COPY docker/nginx.conf /etc/nginx/nginx.conf
@@ -75,5 +79,8 @@ COPY docker/start.sh /start.sh
 RUN chmod +x /start.sh
 
 EXPOSE 80
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+    CMD curl -fsS http://127.0.0.1/ || exit 1
 
 CMD ["/start.sh"]

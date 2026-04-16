@@ -1,18 +1,18 @@
 APP_NAME="BISS System"
 APP_ENV=production
-APP_KEY=
+APP_KEY=base64:IImx1Sq8KZa1SICkFmMziqDChjGscmLUNmP6IG29MdY=
 APP_DEBUG=false
-APP_URL=https://biss.tubagus.my.id
+APP_URL=https://biss.tubagus.biz.id
 
 LOG_CHANNEL=stack
 LOG_LEVEL=error
 
 DB_CONNECTION=mysql
-DB_HOST=localhost
+DB_HOST=biss-database-o6yoxt
 DB_PORT=3306
-DB_DATABASE=ssotoght_namadb
-DB_USERNAME=ssotoght_userdb
-DB_PASSWORD=password_anda
+DB_DATABASE=db_biss
+DB_USERNAME=root
+DB_PASSWORD=tMSjid0bJOeyPbhKNvyK
 
 CACHE_DRIVER=file
 SESSION_DRIVER=file
@@ -20,10 +20,10 @@ SESSION_LIFETIME=120
 QUEUE_CONNECTION=sync
 
 MAIL_MAILER=smtp
-MAIL_HOST=mail.tubagus.my.id
+MAIL_HOST=mail.tubagus.biz.id
 MAIL_PORT=465
-MAIL_USERNAME=email@tubagus.my.id
-MAIL_PASSWORD=email_password
+MAIL_USERNAME=no-reply@tubagus.biz.id
+MAIL_PASSWORD=GANTI_PASSWORD_SMTP
 MAIL_ENCRYPTION=ssl
-MAIL_FROM_ADDRESS=email@tubagus.my.id
+MAIL_FROM_ADDRESS=no-reply@tubagus.biz.id
 MAIL_FROM_NAME="BISS System"
