@@ -48,6 +48,13 @@ if [ "${AUTO_IMPORT_SQL_DUMP:-false}" = "true" ] && [ -n "${SQL_DUMP_FILE}" ] &&
         echo "Importing SQL dump into ${DB_DATABASE}..."
         "${MYSQL_BASE_CMD[@]}" --force "${DB_DATABASE}" < "${SQL_DUMP_FILE}" || true
         echo "SQL import step finished."
+
+        PROJECTS_COUNT_AFTER=$("${MYSQL_BASE_CMD[@]}" -D "${DB_DATABASE}" -Nse "SELECT COUNT(*) FROM projects;" 2>/dev/null || echo "__ERR__")
+        USERS_COUNT_AFTER=$("${MYSQL_BASE_CMD[@]}" -D "${DB_DATABASE}" -Nse "SELECT COUNT(*) FROM users;" 2>/dev/null || echo "__ERR__")
+        BUDGET_PLANS_COUNT_AFTER=$("${MYSQL_BASE_CMD[@]}" -D "${DB_DATABASE}" -Nse "SELECT COUNT(*) FROM budget_plans;" 2>/dev/null || echo "__ERR__")
+        PR_COUNT_AFTER=$("${MYSQL_BASE_CMD[@]}" -D "${DB_DATABASE}" -Nse "SELECT COUNT(*) FROM purchase_requests;" 2>/dev/null || echo "__ERR__")
+
+        echo "Post-import row counts: projects=${PROJECTS_COUNT_AFTER}, users=${USERS_COUNT_AFTER}, budget_plans=${BUDGET_PLANS_COUNT_AFTER}, purchase_requests=${PR_COUNT_AFTER}"
     else
         echo "Skipping SQL import because projects table already has data (${PROJECTS_COUNT} rows)."
     fi
