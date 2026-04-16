@@ -5,6 +5,7 @@ RUN apk add --no-cache \
     nginx \
     nodejs \
     npm \
+    mariadb-client \
     git \
     curl \
     zip \
