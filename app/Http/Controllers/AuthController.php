@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use App\Models\User;
+use Throwable;
 
 class AuthController extends Controller
 {
@@ -23,21 +25,28 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        // Laravel default Auth expects 'email', but we use 'username'.
-        // We can manually attempt.
-        // Also need to check if legacy passwords use bcrypt (they do, based on db_biss.sql).
+        try {
+            // Laravel default Auth expects 'email', but we use 'username'.
+            // We can manually attempt.
+            $user = User::where('username', $request->username)->first();
 
-        $user = User::where('username', $request->username)->first();
+            // Check if user exists and password matches
+            if ($user && Hash::check($request->password, $user->password)) {
+                // Manual Login
+                Auth::login($user);
 
-        // Check if user exists and password matches
-        if ($user && Hash::check($request->password, $user->password)) {
-            
-            // Manual Login
-            Auth::login($user);
+                // Redirect to intended page or Dashboard
+                return redirect()->intended(route('dashboard'))->with('success', 'Logged in successfully.');
+            }
+        } catch (Throwable $e) {
+            Log::error('Login failed due to server/database issue', [
+                'username' => $request->username,
+                'message' => $e->getMessage(),
+            ]);
 
-            // Redirect to intended page or Dashboard
-            // Since we haven't built Dashboard yet, we can go to PR index
-            return redirect()->intended(route('dashboard'))->with('success', 'Logged in successfully.');
+            return back()->withErrors([
+                'username' => 'Login gagal karena koneksi server/database bermasalah. Silakan coba lagi.',
+            ])->onlyInput('username');
         }
 
         return back()->withErrors([
