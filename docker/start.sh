@@ -40,6 +40,26 @@ if [ "${AUTO_IMPORT_SQL_DUMP:-false}" = "true" ] && [ -n "${SQL_DUMP_FILE}" ] &&
     echo "AUTO_IMPORT_SQL_DUMP enabled. Checking current DB contents..."
     echo "Using SQL dump file: ${SQL_DUMP_FILE}"
 
+    # Ensure target database exists before count/import.
+    php -r '
+        $h = getenv("DB_HOST");
+        $p = getenv("DB_PORT") ?: "3306";
+        $d = getenv("DB_DATABASE");
+        $u = getenv("DB_USERNAME");
+        $pw = getenv("DB_PASSWORD");
+        try {
+            $pdo = new PDO("mysql:host={$h};port={$p};charset=utf8mb4", $u, $pw, [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            ]);
+            $safeDb = str_replace("`", "``", $d);
+            $pdo->exec("CREATE DATABASE IF NOT EXISTS `{$safeDb}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+            echo "Ensured database exists: {$d}";
+        } catch (Throwable $e) {
+            fwrite(STDERR, $e->getMessage());
+            exit(1);
+        }
+    ' || true
+
     PROJECTS_COUNT=$(php -r '
         $h = getenv("DB_HOST");
         $p = getenv("DB_PORT") ?: "3306";
@@ -75,13 +95,46 @@ if [ "${AUTO_IMPORT_SQL_DUMP:-false}" = "true" ] && [ -n "${SQL_DUMP_FILE}" ] &&
                     PDO::MYSQL_ATTR_MULTI_STATEMENTS => true,
                 ]);
 
-                $sql = @file_get_contents($file);
+                $sql = @file($file, FILE_IGNORE_NEW_LINES);
                 if ($sql === false) {
                     throw new RuntimeException("Cannot read SQL dump file: {$file}");
                 }
 
-                $pdo->exec($sql);
-                echo "SQL import step finished.";
+                $buffer = "";
+                $ok = 0;
+                $fail = 0;
+
+                foreach ($sql as $line) {
+                    $trim = trim($line);
+
+                    // Skip full-line comments and empty lines.
+                    if ($trim === "" || str_starts_with($trim, "--") || str_starts_with($trim, "/*") || str_starts_with($trim, "*/") || str_starts_with($trim, "/*!")) {
+                        continue;
+                    }
+
+                    $buffer .= $line . "\n";
+
+                    if (str_ends_with($trim, ";")) {
+                        try {
+                            $pdo->exec($buffer);
+                            $ok++;
+                        } catch (Throwable $e) {
+                            $fail++;
+                        }
+                        $buffer = "";
+                    }
+                }
+
+                if (trim($buffer) !== "") {
+                    try {
+                        $pdo->exec($buffer);
+                        $ok++;
+                    } catch (Throwable $e) {
+                        $fail++;
+                    }
+                }
+
+                echo "SQL import step finished. statements_ok={$ok}, statements_failed={$fail}";
             } catch (Throwable $e) {
                 fwrite(STDERR, $e->getMessage());
                 exit(1);
